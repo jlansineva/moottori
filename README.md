@@ -1,6 +1,7 @@
 # pelinrakentaja-engine
 
-FIXME: description
+Pelinrakentaja is a collection of tools aimed for easy game development on 
+Clojure. Moottori is a LibGDX wrapper.
 
 ## Installation
 

@@ -1,34 +1,21 @@
 (ns pelinrakentaja-engine.core
-  (:import [com.badlogic.gdx Game Gdx Graphics Screen]
-           [com.badlogic.gdx.graphics Color GL20]
-           [com.badlogic.gdx.graphics.g2d BitmapFont]
-           [com.badlogic.gdx.scenes.scene2d Stage]
-           [com.badlogic.gdx.scenes.scene2d.ui Label Label$LabelStyle])
-  (:gen-class))
+  "Pelinrakentaja Moottori is a LibGDX wrapper for Clojure, part of Pelinrakentaja collection
+  of tools. Pelinrakentaja is built to provide simple setup for games development in Clojure.
+  The toolset is intended for small-form games where rapid development is key, i.e. game jams.
 
-(gen-class
-  :name pelinrakentaja-engine.core.Game
-  :extends com.badlogic.gdx.Game)
+  Currently, Pelinrakentaja targets only desktop. Possible extensions to other platforms might
+  be coming, but currently new platforms are not on the roadmap.
 
-(def main-screen
-  (let [stage (atom nil)]
-    (proxy [Screen] []
-      (show []
-        (reset! stage (Stage.))
-        (let [style (Label$LabelStyle. (BitmapFont.) (Color. 1 1 1 1))
-              label (Label. "Hello world!" style)]
-          (.addActor @stage label)))
-      (render [delta]
-        (.glClearColor (Gdx/gl) 0 0 0 0)
-        (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
-        (doto @stage
-          (.act delta)
-          (.draw)))
-      (dispose[])
-      (hide [])
-      (pause [])
-      (resize [w h])
-      (resume []))))
+  Moottori provides necessary capabilities for handling different forms of input and output,
+  but is agnostic on the game logic.
 
-(defn -create [^Game this]
-  (.setScreen this main-screen))
+  Moottori is event-driven. Games using Moottori would subscribe to an input event-provider
+  and dispatch entity-events."
+  (:require [pelinrakentaja-engine.core.desktop-launcher :as launcher]))
+
+(defn initialize-window
+  [title]
+  (launcher/setup-window title))
+
+;; needs to register entities
+;; needs to update entities
