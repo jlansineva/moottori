@@ -1,8 +1,8 @@
 (ns pelinrakentaja-engine.core.game
+  (:require [pelinrakentaja-engine.core.state :as state])
   (:import [com.badlogic.gdx Gdx ApplicationAdapter]
            [com.badlogic.gdx.graphics GL20 OrthographicCamera Texture]
-           [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]
-           [com.badlogic.gdx.math Rectangle]))
+           [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]))
 
 (gen-class
   :name pelinrakentaja-engine.core.game.Game
@@ -31,19 +31,16 @@
 
 (defn -render [^ApplicationAdapter this]
   (let [{:keys [camera batch] test-image :texture} @game-data
-        rectangle (Rectangle.)
         font (BitmapFont.)
         text "Testing"]
-    (set! (. rectangle -x) 100)
-    (set! (. rectangle -y) 100)
-    (set! (. rectangle -width) 100)
-    (set! (. rectangle -height) 100)
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
     (.update camera)
     (.setProjectionMatrix batch (.-combined camera))
     (.begin batch)
-    (.draw batch test-image (. rectangle -x) (. rectangle -y))
+    (doseq [entity-id @state/render-queue]
+      (let [entity (get @state/renderable-entities entity-id)]
+        (.draw batch test-image (:x entity) (:y entity))))
     (.end batch)
     (.begin batch)
     (. font draw batch text (float 200) (float 200))
