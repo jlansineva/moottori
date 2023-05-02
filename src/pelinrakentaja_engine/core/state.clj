@@ -1,11 +1,20 @@
-(ns pelinrakentaja-engine.core.state)
+(ns pelinrakentaja-engine.core.state
+  (:import [com.badlogic.gdx Gdx]
+           [com.badlogic.gdx.graphics Texture]))
 
-(defonce renderable-entities (atom {:id1 {:id :id1 :type :id :x (float 50) :y (float 50)}
-                                    :id2 {:id :id2 :type :id :x (float 150) :y (float 150)}
-                                    :id3 {:id :id3 :type :id :x (float 250) :y (float 250)}
-                                    :id4 {:id :id4 :type :id :x (float 350) :y (float 350)}}))
+(defonce textures-for-type
+  (atom {}))
 
-(defonce render-queue (atom [:id1 :id2 :id4]))
+(defonce renderable-entities
+  (atom {}))
+
+(defonce render-queue
+  (atom []))
+
+(defn load-texture
+  [type-id path]
+  (swap! textures-for-type
+    assoc type-id (Texture. (.internal (. Gdx -files) path))))
 
 (defn add-entity
   [entity]
@@ -13,6 +22,27 @@
                  (update :x float)
                  (update :y float)
                  (assoc :id (keyword (gensym (name (:type entity))))))]
-    (swap! renderable-entities assoc (:id to-add) to-add)
-    (swap! render-queue conj (:id to-add))
-    to-add))
+    (when (get @textures-for-type (:type entity))
+      (swap! renderable-entities assoc (:id to-add) to-add)
+      (swap! render-queue conj (:id to-add))
+      to-add)))
+
+(defn add-entities
+  [& entities]
+  (mapv add-entity entities))
+
+(comment {:type :id
+          :texture "some.png"}
+
+         {:enemies {}
+          :bullets {}
+          :player {}
+          :terrain {}
+          :ui {}}
+
+         [:terrain :enemies :bullets :player :ui])
+
+(defn load-entity
+  [entity]
+  (let [{:keys [type texture]} entity]
+    (load-texture type texture)))

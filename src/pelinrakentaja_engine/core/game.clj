@@ -30,7 +30,7 @@
       (resume []))))
 
 (defn -render [^ApplicationAdapter this]
-  (let [{:keys [camera batch] test-image :texture} @game-data
+  (let [{:keys [camera batch]} @game-data
         font (BitmapFont.)
         text "Testing"]
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
@@ -39,8 +39,9 @@
     (.setProjectionMatrix batch (.-combined camera))
     (.begin batch)
     (doseq [entity-id @state/render-queue]
-      (let [entity (get @state/renderable-entities entity-id)]
-        (.draw batch test-image (:x entity) (:y entity))))
+      (let [entity (get @state/renderable-entities entity-id)
+            texture (get @state/textures-for-type (:type entity))]
+        (.draw batch texture (:x entity) (:y entity))))
     (.end batch)
     (.begin batch)
     (. font draw batch text (float 200) (float 200))
@@ -48,10 +49,14 @@
 
 (defn -create [^ApplicationAdapter this]
   (let [camera (OrthographicCamera.)
-        sprite-batch (SpriteBatch.)
-        test-image (Texture. (.internal (. Gdx -files) "some.png"))]
+        sprite-batch (SpriteBatch.)]
+    (state/load-entity {:type :id :texture "some.png"})
+    (state/add-entities
+      {:x 34 :y 56 :type :id}
+      {:x 134 :y 56 :type :id}
+      {:x 34 :y 156 :type :id}
+      {:x 234 :y 56 :type :id})
     (.setToOrtho camera false 800 480)
     (swap! game-data assoc
-      :texture test-image
       :camera camera
       :batch sprite-batch)))
