@@ -1,7 +1,8 @@
 (ns pelinrakentaja-engine.core.game
-  (:require [pelinrakentaja-engine.core.state :as state])
+  (:require [pelinrakentaja-engine.core.state :as state]
+            [pelinrakentaja-engine.core.input :as input])
   (:import [com.badlogic.gdx Gdx ApplicationAdapter]
-           [com.badlogic.gdx.graphics GL20 OrthographicCamera Texture]
+           [com.badlogic.gdx.graphics GL20 OrthographicCamera]
            [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]))
 
 (gen-class
@@ -56,6 +57,7 @@
       {:x 134 :y 56 :type :id}
       {:x 34 :y 156 :type :id}
       {:x 234 :y 56 :type :id})
+    (.setInputProcessor (. Gdx -input) (pelinrakentaja-engine.core.input.Input.))
     (.setToOrtho camera false 800 480)
     (swap! game-data assoc
       :camera camera
