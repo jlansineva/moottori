@@ -1,18 +1,17 @@
 (ns pelinrakentaja-engine.core.input
-  (:require [pelinrakentaja-engine.core.state :as state])
+  (:require [pelinrakentaja-engine.core.events :as events]
+            [pelinrakentaja-engine.utils.log :as log])
   (:import [com.badlogic.gdx InputAdapter]))
 
-(gen-class
-  :name pelinrakentaja-engine.core.input.Input
-  :extends com.badlogic.gdx.InputAdapter)
-
-(defn -keyDown
-  [^InputAdapter this key-code]
-  (prn :> this)
-  (prn :> key-code)
-  (swap! state/renderable-entities (fn [entities]
-                                     (prn :> entities)
-                                     (into {} (mapv (fn [[id entity]]
-                                                      (prn :> id entity)
-                                                      [id (update entity :x #(float (inc %)))]) entities))))
-  true)
+(defn create-input-adapter
+  []
+  (prn :create-input-adapter)
+  (proxy [InputAdapter] []
+    (keyDown [key-code]
+      (log/log :debug :input-adapter/key-down key-code)
+      (events/dispatch [:input/key-down key-code])
+      true)
+    (keyUp [key-code]
+      (log/log :debug :input-adapter/key-up)
+      (events/dispatch [:input/key-up key-code])
+      true)))
