@@ -1,6 +1,7 @@
 (ns pelinrakentaja-engine.core.game
   (:require [pelinrakentaja-engine.core.state :as state]
-            [pelinrakentaja-engine.core.input :as input])
+            [pelinrakentaja-engine.core.input :as input]
+            [pelinrakentaja-engine.core.events :as events])
   (:import [com.badlogic.gdx Gdx ApplicationAdapter]
            [com.badlogic.gdx.graphics GL20 OrthographicCamera]
            [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]))
@@ -51,13 +52,27 @@
 (defn -create [^ApplicationAdapter this]
   (let [camera (OrthographicCamera.)
         sprite-batch (SpriteBatch.)]
+    (events/register-handler :input/key-down
+                             (fn [state key-code]
+                               (prn :> :key-down)
+                               (swap! state/renderable-entities
+                                      (fn [entities]
+                                        (into {} (mapv (fn [[id entity]]
+                                                         [id (update entity :x #(float (inc %)))]) entities))))))
+    (events/register-handler :input/key-up
+                             (fn [state key-code]
+                               (prn :> :key-up)
+                               (swap! state/renderable-entities
+                                      (fn [entities]
+                                        (into {} (mapv (fn [[id entity]]
+                                                         [id (update entity :x #(float (inc %)))]) entities))))))
     (state/load-entity {:type :id :texture "some.png"})
     (state/add-entities
       {:x 34 :y 56 :type :id}
       {:x 134 :y 56 :type :id}
       {:x 34 :y 156 :type :id}
       {:x 234 :y 56 :type :id})
-    (.setInputProcessor (. Gdx -input) (pelinrakentaja-engine.core.input.Input.))
+    (.setInputProcessor (. Gdx -input) (input/create-input-adapter))
     (.setToOrtho camera false 800 480)
     (swap! game-data assoc
       :camera camera
