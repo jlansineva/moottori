@@ -12,7 +12,7 @@
                  [com.badlogicgames.gdx/gdx-platform "1.11.0"
                   :classifier "natives-desktop"]]
   :source-paths ["src" "src-common"]
-  :aot [pelinrakentaja-engine.core.desktop-launcher]
+  :aot [pelinrakentaja-engine.core.desktop-launcher pelinrakentaja-engine.core.input]
   :main pelinrakentaja-engine.core.desktop-launcher
   :target-path "target/%s"
   :profiles {:dev {:aot :all
