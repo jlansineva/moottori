@@ -1,4 +1,6 @@
-(ns pelinrakentaja-engine.core.events)
+(ns pelinrakentaja-engine.core.events
+  (:require [pelinrakentaja-engine.utils.log :as log]
+            [pelinrakentaja-engine.core.state :as state]))
 
 (comment
   ;; event
@@ -6,13 +8,79 @@
 
 
   )
+(def initial-state
+  {:engine {:initialized? false
+            :ready? false
+            :cleanup? false}})
 
-(defonce state (atom {}))
+(defonce state (atom initial-state))
 
 (def event-queue
   "For storing events"
   (atom {:handlers {}
+         :listeners {}
+         :affected {}
          :queue []}))
+
+(comment
+  ;; handler affects path
+  ;; check for path if there is a listener
+  ;; toggle a dirty flag (or modified flag)
+  ;; if dirty flag is true, update listeners and remove flag
+  ;;
+  {:handlers {:id :handler
+              :id2 :handler2}
+   :affected {:id true
+              :id2 false}
+   :listeners {:paths [[[:path :to :state] :id]
+                       [[:path :to :another] :id2]]
+               :fns {:id {:fn (fn [state] (prn state))
+                          :path [:path :to :state]}
+                     :id2 {:fn (fn [state] (prn state))
+                           :path [:path :to :else]}}}}
+
+  {:input {:keys {:a true}}})
+
+(defn add-listener
+  [queue-state id path listener-fn]
+  (-> queue-state
+      (update-in [:listeners :paths] conj [path id])
+      (update-in [:listeners :fns id] {:fn listener-fn
+                                       :path path}))) ;; TODO: check if path exists
+
+(defn remove-listener
+  [queue-state id]
+  (let [remove-from-paths #(not= id (second %))]
+    (-> queue-state
+        (update-in [:listeners :paths] #(filter remove-from-paths %))
+        (update-in [:listeners :fns] dissoc id))))
+
+
+(defn register-listener
+  "Registers a listener. A listener has an id that it is referred to by.
+  A listener is also given a path that it observes. Should the path be affected,
+  a listener will return a new value. Otherwise it will return nil."
+  [id path listener-fn]
+  (log/log :debug :listener/register id)
+  (swap! event-queue add-listener id path listener-fn))
+
+(defn clear-listener
+  [id]
+  (swap! event-queue remove-listener id))
+
+(defn listener
+  "If a listener is registered and the path is affected, the listener is called with the new state"
+  [listener-id]
+  (fn -listener
+    []
+    (log/log :debug :listener/invoked listener-id)
+    (if-let [l (get-in @event-queue [:listeners :fns listener-id])]
+      (let [path (get l :path)
+            listener-fn (get l :fn)]
+        (when (get-in @event-queue [:affected listener-id])
+          (listener-fn (get-in @state path))))
+      (when (get-in @state [:engine :initialized?])
+        (throw (Exception. "whoops no listener")))))) ;; TODO error logging
 
 (defn create-handler
   [handler-fn]
@@ -25,7 +93,7 @@
 
 (defn register-handler
   [event-id handler-fn]
-  (prn :register-handler event-id)
+  (prn :register-handler event-id) ;; TODO use logging
   (let [state-injected-handler (create-handler handler-fn)]
     (swap! event-queue assoc-in [:handlers event-id] state-injected-handler)))
 
@@ -37,16 +105,17 @@
         (when (apply handler parameters)
           (assoc event-queue :queue (or events [])))
         (if event-id
-          (throw (Exception. "whoops no handler"))
-          (throw (Exception. "whoops empty queue")))))
+          (throw (Exception. "whoops no handler")) ;; TODO ERROR LOGGING
+          (throw (Exception. "whoops empty queue"))))) ;; TODO ERROR LOGGING
     event-queue))
 
 (defn update-queue
   []
-  (swap! event-queue process-next-event))
+  (when (:initialized? @state)
+   (swap! event-queue process-next-event)))
 
 (defn dispatch
   [event]
   {:pre [(vector? event)]}
-  (prn :dispatch event @event-queue)
+  (log/log :debug :event/dispatch event)
   (swap! event-queue #(update % :queue conj event)))
