@@ -1,4 +1,5 @@
-(ns pelinrakentaja-engine.core.core-listeners)
+(ns pelinrakentaja-engine.core.core-listeners
+  (:require [pelinrakentaja-engine.utils.log :as log]))
 
 (defn engine-status
   [state]
