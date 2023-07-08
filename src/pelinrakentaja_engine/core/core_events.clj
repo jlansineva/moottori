@@ -36,15 +36,18 @@
 
 (defn engine-cleanup
   [state]
-  (assoc-in state [:engine :cleanup?] true))
+  (log/log :debug :event-handlers/engine-cleanup state)
+  (assoc-in state [:engine :status :cleanup?] true))
 
 (defn engine-ready
   [state]
-  (assoc-in state [:engine :ready?] true))
+  (log/log :debug :event-handlers/engine-ready state)
+  (assoc-in state [:engine :status :ready?] true))
 
 (defn engine-initialized
   [state]
-  (assoc-in state [:engine :initialized?] true))
+  (log/log :debug :event-handlers/engine-initialized state)
+  (assoc-in state [:engine :status :initialized?] true))
 
 (defn key-down
   [state key-code]
