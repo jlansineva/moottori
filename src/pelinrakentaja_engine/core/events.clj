@@ -9,14 +9,15 @@
 
   )
 (def initial-state
-  {:engine {:initialized? false
-            :ready? false
-            :cleanup? false}})
+  {:engine
+   {:status
+    {:initialized? false
+     :ready? false
+     :cleanup? false}}})
 
 (defonce state (atom initial-state))
 
-(def event-queue
-  "For storing events"
+(defonce event-queue
   (atom {:handlers {}
          :listeners {}
          :affected {}
@@ -45,7 +46,7 @@
   [queue-state id path listener-fn]
   (-> queue-state
       (update-in [:listeners :paths] conj [path id])
-      (update-in [:listeners :fns id] {:fn listener-fn
+      (assoc-in [:listeners :fns id] {:fn listener-fn
                                        :path path}))) ;; TODO: check if path exists
 
 (defn remove-listener
@@ -73,14 +74,13 @@
   [listener-id]
   (fn -listener
     []
-    (log/log :debug :listener/invoked listener-id)
     (if-let [l (get-in @event-queue [:listeners :fns listener-id])]
       (let [path (get l :path)
             listener-fn (get l :fn)]
-        (when (get-in @event-queue [:affected listener-id])
-          (listener-fn (get-in @state path))))
-      (when (get-in @state [:engine :initialized?])
-        (throw (Exception. "whoops no listener")))))) ;; TODO error logging
+        #_(when (get-in @event-queue [:affected listener-id]))
+        (listener-fn (get-in @state path)))
+      (when (get-in @state [:engine :status :initialized?])
+        (throw (Exception. (str "whoops no listener " listener-id (pr-str (:listeners @event-queue))))))))) ;; TODO error logging
 
 (defn create-handler
   [handler-fn]
@@ -105,17 +105,27 @@
         (when (apply handler parameters)
           (assoc event-queue :queue (or events [])))
         (if event-id
-          (throw (Exception. "whoops no handler")) ;; TODO ERROR LOGGING
+          (throw (Exception. (str "whoops no handler " event-id))) ;; TODO ERROR LOGGING
           (throw (Exception. "whoops empty queue"))))) ;; TODO ERROR LOGGING
     event-queue))
 
 (defn update-queue
-  []
-  (when (:initialized? @state)
-   (swap! event-queue process-next-event)))
+  ([]
+   (update-queue false))
+  ([force?]
+   (log/log :debug :event/queue-update "updating queue")
+   (when (or (get-in @state [:engine :status :initialized?]) force?)
+     (swap! event-queue process-next-event))))
+
+(defn force
+  [event]
+  {:pre [(vector? event)]}
+  (log/log :debug :event/force event @event-queue)
+  (swap! event-queue #(update % :queue conj event))
+  (update-queue true))
 
 (defn dispatch
   [event]
   {:pre [(vector? event)]}
-  (log/log :debug :event/dispatch event)
+  (log/log :debug :event/dispatch event @event-queue)
   (swap! event-queue #(update % :queue conj event)))
