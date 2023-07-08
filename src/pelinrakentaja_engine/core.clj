@@ -12,7 +12,8 @@
   Moottori is event-driven. Games using Moottori would subscribe to an input event-provider
   and dispatch entity-events."
   (:require [pelinrakentaja-engine.core.desktop-launcher :as launcher]
-            [pelinrakentaja-engine.core.events :as events]))
+            [pelinrakentaja-engine.core.events :as events]
+            [pelinrakentaja-engine.utils.log :as log]))
 
 (defn initialize-window
   [title]
@@ -21,10 +22,15 @@
 ;; needs to register entities
 ;; needs to update entities
 
-(defmacro run-logic [body])
-
 (def listen events/listener)
 (def dispatch events/dispatch)
 
 (def register-listener events/register-listener)
 (def clear-listener events/clear-listener)
+
+(defn update
+  "Calling update somewhere in your logic updates the engine event queue and state. This is required."
+  []
+  (events/update-queue)
+  (log/print-logs)
+  (Thread/sleep 16))
