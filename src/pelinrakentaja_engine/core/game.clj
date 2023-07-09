@@ -2,6 +2,7 @@
   (:require [pelinrakentaja-engine.core.state :as state]
             [pelinrakentaja-engine.core.input :as input]
             [pelinrakentaja-engine.core.events :as events]
+            [pelinrakentaja-engine.core.graphics.textures :as textures]
 
             [pelinrakentaja-engine.utils.log :as log])
   (:import [com.badlogic.gdx Gdx ApplicationAdapter]
@@ -14,11 +15,17 @@
 
 (defonce game-data (atom {}))
 
+(def resource-queue-listener (events/listener :resources/resource-load-queue))
+
 (defn -render
   [^ApplicationAdapter this]
   (let [{:keys [camera batch]} @game-data
         font (BitmapFont.)
-        text "Testing"]
+        text "Testing"
+        resource-load-queue (resource-queue-listener)]
+    (when resource-load-queue
+      (let [{:keys [id path]} (first resource-load-queue)]
+        (textures/load-texture-from-resource id path)))
     #_(log/log :debug :events (:engine @events/state))
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
@@ -27,7 +34,7 @@
     (.begin batch)
     (doseq [entity-id @state/render-queue]
       (let [entity (get @state/renderable-entities entity-id)
-            texture (get @state/textures-for-type (:type entity))]
+            texture (get @textures/textures-for-type (:type entity))]
         (.draw batch texture (:x entity) (:y entity))))
     (.end batch)
     (.begin batch)
