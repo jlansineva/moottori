@@ -1,6 +1,5 @@
 (ns pelinrakentaja-engine.core.events
-  (:require [pelinrakentaja-engine.utils.log :as log]
-            [pelinrakentaja-engine.core.state :as state]))
+  (:require [pelinrakentaja-engine.utils.log :as log]))
 
 (comment
   ;; event
@@ -36,7 +35,8 @@
    :listeners {:paths [[[:path :to :state] :id]
                        [[:path :to :another] :id2]]
                :fns {:id {:fn (fn [state] (prn state))
-                          :path [:path :to :state]}
+                          :path [:path :to :state]
+                          :fx (fn [state] (assoc state :a :b))}
                      :id2 {:fn (fn [state] (prn state))
                            :path [:path :to :else]}}}}
 
@@ -47,7 +47,7 @@
   (-> queue-state
       (update-in [:listeners :paths] conj [path id])
       (assoc-in [:listeners :fns id] {:fn listener-fn
-                                       :path path}))) ;; TODO: check if path exists
+                                      :path path}))) ;; TODO: check if path exists
 
 (defn remove-listener
   [queue-state id]
@@ -76,9 +76,10 @@
     []
     (if-let [l (get-in @event-queue [:listeners :fns listener-id])]
       (let [path (get l :path)
-            listener-fn (get l :fn)]
+            listener-fn (get l :fn)
+            returnable (listener-fn (get-in @state path))]
         #_(when (get-in @event-queue [:affected listener-id]))
-        (listener-fn (get-in @state path)))
+        returnable)
       (when (get-in @state [:engine :status :initialized?])
         (throw (Exception. (str "whoops no listener " listener-id (pr-str (:listeners @event-queue))))))))) ;; TODO error logging
 
@@ -89,11 +90,11 @@
     ([p1] (swap! state handler-fn p1))
     ([p1 p2] (swap! state handler-fn p1 p2))
     ([p1 p2 p3] (swap! state handler-fn p1 p2 p3))
-    ([p1 p2 p3 & params] (apply swap! handler-fn p1 p2 p3 params))))
+    ([p1 p2 p3 & params] (apply swap! state handler-fn p1 p2 p3 params))))
 
 (defn register-handler
   [event-id handler-fn]
-  (prn :register-handler event-id) ;; TODO use logging
+  (log/log :debug :register-handler event-id) ;; TODO use logging
   (let [state-injected-handler (create-handler handler-fn)]
     (swap! event-queue assoc-in [:handlers event-id] state-injected-handler)))
 

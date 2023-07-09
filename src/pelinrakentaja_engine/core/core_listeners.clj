@@ -2,13 +2,18 @@
   (:require [pelinrakentaja-engine.utils.log :as log]))
 
 (defn engine-status
-  [state]
-  state)
+  [substate]
+  substate)
 
 (defn pressed-keys
-  [state]
-  state)
+  [substate]
+  substate)
 
 (defn entity-with-id
   [entity-id]
   )
+
+(defn resource-load-queue
+  [substate]
+  (when-not (empty? substate)
+    substate))

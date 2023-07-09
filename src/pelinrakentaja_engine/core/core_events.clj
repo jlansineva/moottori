@@ -1,23 +1,39 @@
 (ns pelinrakentaja-engine.core.core-events
   (:require [pelinrakentaja-engine.utils.log :as log]
-            [pelinrakentaja-engine.core.state :as state]))
+            [pelinrakentaja-engine.core.state :as s]))
 
 (defn load-texture
-  [{:keys [type texture] :as entity}]
-  (state/load-texture type texture))
+  "Loading of the texture resources have to be done from within the libGDX-thread, so resources
+  have to be added to a queue."
+  [state {:keys [type texture] :as entity}]
+  (update-in state [:engine :graphics :resource-load-queue] conj {:id type :path texture}))
+
+(defn resource-loaded
+  "Takes the first resource off the resource load queue"
+  [state]
+  (-> state
+      (update-in [:engine :graphics :resource-load-queue] rest)
+      (update-in [:engine :graphics :resource-load-queue] vec)))
 
 (defn add-entity
-  [_state entity]
+  [state entity]
   {:pre [(some? (:x entity))
          (some? (:y entity))
          (some? (:type entity))]}
   (log/log :debug :event-handlers/add-entity entity)
-  (state/add-entity entity))
+  (s/add-entity entity)
+  state)
+
+(defn add-entities
+  [state & entities]
+  (doseq [e entities]
+    (add-entity state e))
+  state)
 
 (defn update-entity-with-id
   [_state entity-id entity]
   (log/log :debug :event-handlers/update-entity-with-id entity-id)
-  (swap! state/renderable-entities
+  (swap! s/renderable-entities
          (fn [entities]
            (loop [current (first entities)
                   remaining (rest entities)
