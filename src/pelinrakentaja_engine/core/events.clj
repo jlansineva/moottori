@@ -1,5 +1,6 @@
 (ns pelinrakentaja-engine.core.events
-  (:require [pelinrakentaja-engine.utils.log :as log]))
+  (:require [pelinrakentaja-engine.utils.log :as log]
+            [pelinrakentaja-engine.core.state :as state]))
 
 (comment
   ;; event
@@ -7,14 +8,7 @@
 
 
   )
-(def initial-state
-  {:engine
-   {:status
-    {:initialized? false
-     :ready? false
-     :cleanup? false}}})
 
-(defonce state (atom initial-state))
 
 (defonce event-queue
   (atom {:handlers {}
@@ -77,20 +71,20 @@
     (if-let [l (get-in @event-queue [:listeners :fns listener-id])]
       (let [path (get l :path)
             listener-fn (get l :fn)
-            returnable (listener-fn (get-in @state path))]
+            returnable (listener-fn (get-in @state/engine-state path))]
         #_(when (get-in @event-queue [:affected listener-id]))
         returnable)
-      (when (get-in @state [:engine :status :initialized?])
+      (when (get-in @state/engine-state [:engine :status :initialized?])
         (throw (Exception. (str "whoops no listener " listener-id (pr-str (:listeners @event-queue))))))))) ;; TODO error logging
 
 (defn create-handler
   [handler-fn]
   (fn -handler
-    ([] (swap! state handler-fn))
-    ([p1] (swap! state handler-fn p1))
-    ([p1 p2] (swap! state handler-fn p1 p2))
-    ([p1 p2 p3] (swap! state handler-fn p1 p2 p3))
-    ([p1 p2 p3 & params] (apply swap! state handler-fn p1 p2 p3 params))))
+    ([] (swap! state/engine-state handler-fn))
+    ([p1] (swap! state/engine-state handler-fn p1))
+    ([p1 p2] (swap! state/engine-state handler-fn p1 p2))
+    ([p1 p2 p3] (swap! state/engine-state handler-fn p1 p2 p3))
+    ([p1 p2 p3 & params] (apply swap! state/engine-state handler-fn p1 p2 p3 params))))
 
 (defn register-handler
   [event-id handler-fn]
@@ -115,7 +109,7 @@
    (update-queue false))
   ([force?]
    (log/log :debug :event/queue-update "updating queue")
-   (when (or (get-in @state [:engine :status :initialized?]) force?)
+   (when (or (get-in @state/engine-state [:engine :status :initialized?]) force?)
      (swap! event-queue process-next-event))))
 
 (defn force

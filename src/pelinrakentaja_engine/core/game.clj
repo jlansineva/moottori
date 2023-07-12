@@ -26,7 +26,7 @@
     (when resource-load-queue
       (let [{:keys [id path]} (first resource-load-queue)]
         (textures/load-texture-from-resource id path)))
-    #_(log/log :debug :events (:engine @events/state))
+    (log/log :debug :events @state/render-queue)
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
     (.update camera)
@@ -34,7 +34,8 @@
     (.begin batch)
     (doseq [entity-id @state/render-queue]
       (let [entity (get @state/renderable-entities entity-id)
-            texture (get @textures/textures-for-type (:type entity))]
+            texture (get-in @state/engine-state [:resources :texture (:type entity)])]
+        (log/log :debug :events texture)
         (.draw batch texture (:x entity) (:y entity))))
     (.end batch)
     (.begin batch)

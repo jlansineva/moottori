@@ -8,10 +8,14 @@
   [state {:keys [type texture] :as entity}]
   (update-in state [:engine :graphics :resource-load-queue] conj {:id type :path texture}))
 
+(def supported-resources #{:texture})
+
 (defn resource-loaded
   "Takes the first resource off the resource load queue"
-  [state]
+  [state resource-type resource-id resource]
+  {:pre [(supported-resources resource-type)]}
   (-> state
+      (assoc-in [:resources resource-type resource-id] resource)
       (update-in [:engine :graphics :resource-load-queue] rest)
       (update-in [:engine :graphics :resource-load-queue] vec)))
 

@@ -8,6 +8,5 @@
 
 (defn load-texture-from-resource
   [id path]
-  (swap! textures-for-type
-         assoc id (Texture. (.internal (. Gdx -files) path)))
-  (events/dispatch [:resources/resource-loaded]))
+  (let [texture (Texture. (.internal (. Gdx -files) path))]
+    (events/dispatch [:resources/resource-loaded :texture id texture])))
