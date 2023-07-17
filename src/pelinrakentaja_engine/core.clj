@@ -19,6 +19,13 @@
   [title]
   (launcher/setup-window title))
 
+(defmacro game-loop
+  [& body]
+  `(let [~'loop-fn (fn []
+                   (do ~@body)
+                   (System/exit 0))]
+     (.start (Thread. ~'loop-fn))))
+
 ;; needs to register entities
 ;; needs to update entities
 
@@ -28,7 +35,7 @@
 (def register-listener events/register-listener)
 (def clear-listener events/clear-listener)
 
-(defn update
+(defn update!
   "Calling update somewhere in your logic updates the engine event queue and state. This is required."
   []
   (events/update-queue)
