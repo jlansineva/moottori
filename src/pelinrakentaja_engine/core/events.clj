@@ -98,7 +98,7 @@
     (let [[[event-id & parameters] & events] (:queue event-queue)]
       (if-let [handler (get-in (:handlers event-queue) [event-id])]
         (when (apply handler parameters)
-          (assoc event-queue :queue (or events [])))
+          (assoc event-queue :queue (or (vec events) [])))
         (if event-id
           (throw (Exception. (str "whoops no handler " event-id))) ;; TODO ERROR LOGGING
           (throw (Exception. "whoops empty queue"))))) ;; TODO ERROR LOGGING
