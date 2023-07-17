@@ -25,19 +25,22 @@
          (some? (:y entity))
          (some? (:type entity))]}
   (log/log :debug :event-handlers/add-entity entity)
-  (s/add-entity entity)
-  state)
+  (let [new-entity (s/create-entity entity)]
+    (cond-> state
+        new-entity (update-in [:engine :graphics :render-queue] conj (:id new-entity))
+        new-entity (assoc-in [:engine :entities (:id new-entity)] new-entity))))
 
 (defn add-entities
   [state & entities]
-  (doseq [e entities]
-    (add-entity state e))
-  state)
+  (reduce add-entity
+          state
+          entities))
 
 (defn update-entity-with-id
-  [_state entity-id entity]
+  [state entity-id entity]
   (log/log :debug :event-handlers/update-entity-with-id entity-id)
-  (swap! s/renderable-entities
+  (update-in state
+             [:engine :entities]
          (fn [entities]
            (loop [current (first entities)
                   remaining (rest entities)
@@ -53,6 +56,10 @@
                    (recur (first remaining)
                           (rest remaining)
                           (conj processed current)))))))
+
+(defn update-entities-with-fn
+  [state fn]
+  (update-in state [:engine :entities] fn))
 
 (defn engine-cleanup
   [state]

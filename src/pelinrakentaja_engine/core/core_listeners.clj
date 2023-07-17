@@ -17,3 +17,6 @@
   [substate]
   (when-not (empty? substate)
     substate))
+
+(def render-queue identity)
+(def renderable-entities identity)

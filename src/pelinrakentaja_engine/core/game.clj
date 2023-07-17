@@ -16,24 +16,28 @@
 (defonce game-data (atom {}))
 
 (def resource-queue-listener (events/listener :resources/resource-load-queue))
+(def render-queue (events/listener :engine/render-queue))
+(def renderable-entities (events/listener :engine/renderable-entities))
 
 (defn -render
   [^ApplicationAdapter this]
   (let [{:keys [camera batch]} @game-data
         font (BitmapFont.)
         text "Testing"
-        resource-load-queue (resource-queue-listener)]
+        resource-load-queue (resource-queue-listener)
+        render-q (render-queue)
+        entities (renderable-entities)]
     (when resource-load-queue
       (let [{:keys [id path]} (first resource-load-queue)]
         (textures/load-texture-from-resource id path)))
-    (log/log :debug :events @state/render-queue)
+    (log/log :debug :events render-q)
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
     (.update camera)
     (.setProjectionMatrix batch (.-combined camera))
     (.begin batch)
-    (doseq [entity-id @state/render-queue]
-      (let [entity (get @state/renderable-entities entity-id)
+    (doseq [entity-id render-q]
+      (let [entity (get entities entity-id)
             texture (get-in @state/engine-state [:resources :texture (:type entity)])]
         (log/log :debug :events texture)
         (.draw batch texture (:x entity) (:y entity))))
