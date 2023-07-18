@@ -27,7 +27,7 @@
   (events/register-listener :engine/renderable-entities [:engine :entities] core-listeners/renderable-entities)
   (let [config (Lwjgl3ApplicationConfiguration.)]
     (.setTitle config (or title "Game"))
-    (.setWindowedMode config (or width 800) (or height 600))
+    (.setWindowedMode config (or width 1024) (or height 768))
     (Lwjgl3Application. (pelinrakentaja-engine.core.game.Game.) config)))
 
 (defn -main []

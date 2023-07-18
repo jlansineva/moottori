@@ -37,9 +37,15 @@
     (.setProjectionMatrix batch (.-combined camera))
     (.begin batch)
     (doseq [entity-id render-q]
-      (let [entity (get entities entity-id)]
+      (let [{{:keys [width height]
+              tex-x :x
+              tex-y :y} :texture :as entity} (get entities entity-id)]
         (when-let [texture (get-in @state/engine-state [:resources :texture (:type entity)])]
           (log/log :debug :events texture)
+          (.setRegion texture
+                      (or tex-x 0) (or tex-y 0)
+                      (or width (-> texture .getTexture .getWidth))
+                      (or height (-> texture .getTexture .getHeight)))
           (.draw batch texture (:x entity) (:y entity)))))
     (.end batch)
     (.begin batch)
