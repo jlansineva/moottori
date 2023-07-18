@@ -1,6 +1,6 @@
 (ns pelinrakentaja-engine.core.core-events
   (:require [pelinrakentaja-engine.utils.log :as log]
-            [pelinrakentaja-engine.core.state :as s]))
+            [pelinrakentaja-engine.core.entities :as entities]))
 
 (defn load-texture
   "Loading of the texture resources have to be done from within the libGDX-thread, so resources
@@ -25,7 +25,7 @@
          (some? (:y entity))
          (some? (:type entity))]}
   (log/log :debug :event-handlers/add-entity entity)
-  (let [new-entity (s/create-entity entity)]
+  (let [new-entity (entities/create-entity entity)]
     (cond-> state
         new-entity (update-in [:engine :graphics :render-queue] conj (:id new-entity))
         new-entity (assoc-in [:engine :entities (:id new-entity)] new-entity))))
@@ -36,26 +36,36 @@
           state
           entities))
 
-(defn update-entity-with-id
+(defn find-and-update-entity
+  [entities entity-id modifier-fn]
+  (loop [current (first entities)
+         remaining (rest entities)
+         processed []]
+
+    (cond (nil? current)
+          processed
+
+          (= (:id current) entity-id)
+          (vec (concat processed [(modifier-fn current)] remaining))
+
+          :else
+          (recur (first remaining)
+                 (rest remaining)
+                 (conj processed current)))))
+
+(defn update-entity-id-with-fn
+  [state entity-id modifier-fn]
+  (log/log :debug :event-handlers/update-entity-id-with-fn entity-id)
+  (update-in state
+             [:engine :entities entity-id]
+             modifier-fn))
+
+(defn update-entity-id
   [state entity-id entity]
   (log/log :debug :event-handlers/update-entity-with-id entity-id)
   (update-in state
-             [:engine :entities]
-         (fn [entities]
-           (loop [current (first entities)
-                  remaining (rest entities)
-                  processed []]
-
-             (cond (nil? current)
-                   processed
-
-                   (= (:id current) entity-id)
-                   (vec (concat processed [entity] remaining))
-
-                   :else
-                   (recur (first remaining)
-                          (rest remaining)
-                          (conj processed current)))))))
+             [:engine :entities entity-id]
+             (constantly entity)))
 
 (defn update-entities-with-fn
   [state fn]

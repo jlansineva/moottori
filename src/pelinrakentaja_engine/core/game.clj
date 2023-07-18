@@ -55,10 +55,12 @@
 (defn -create
   [^ApplicationAdapter this]
   (log/log :debug :engine/lifecycle "creating")
-  (let [camera (OrthographicCamera.)
+  (let [cam-w (.getWidth (. Gdx -graphics))
+        cam-h (.getHeight (. Gdx -graphics))
+        camera (OrthographicCamera. 100, (* 100 (/ cam-h cam-w)))
         sprite-batch (SpriteBatch.)]
     (.setInputProcessor (. Gdx -input) (input/create-input-adapter))
-    (.setToOrtho camera false 800 480)
+    (.setToOrtho camera false cam-w cam-h) ;; TODO something sensible to these, maybe use a viewport
     (swap! game-data assoc
            :camera camera
            :batch sprite-batch)
