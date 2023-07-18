@@ -95,13 +95,20 @@
 (defn process-next-event
   [event-queue]
   (if (> (count (:queue event-queue)) 0)
-    (let [[[event-id & parameters] & events] (:queue event-queue)]
-      (if-let [handler (get-in (:handlers event-queue) [event-id])]
-        (when (apply handler parameters)
-          (assoc event-queue :queue (or (vec events) [])))
-        (if event-id
-          (throw (Exception. (str "whoops no handler " event-id))) ;; TODO ERROR LOGGING
-          (throw (Exception. "whoops empty queue"))))) ;; TODO ERROR LOGGING
+    (assoc
+     event-queue
+     :queue
+     (loop [queue (:queue event-queue)]
+       (if (empty? queue)
+         queue
+         (recur
+          (let [[[event-id & parameters] & events] queue]
+            (if-let [handler (get-in (:handlers event-queue) [event-id])]
+              (when (apply handler parameters)
+                (vec events))
+              (if event-id
+                (throw (Exception. (str "whoops no handler " event-id))) ;; TODO ERROR LOGGING
+                (throw (Exception. "whoops empty queue"))))))))) ;; TODO ERROR LOGGING
     event-queue))
 
 (defn update-queue

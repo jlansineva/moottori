@@ -37,10 +37,10 @@
     (.setProjectionMatrix batch (.-combined camera))
     (.begin batch)
     (doseq [entity-id render-q]
-      (let [entity (get entities entity-id)
-            texture (get-in @state/engine-state [:resources :texture (:type entity)])]
-        (log/log :debug :events texture)
-        (.draw batch texture (:x entity) (:y entity))))
+      (let [entity (get entities entity-id)]
+        (when-let [texture (get-in @state/engine-state [:resources :texture (:type entity)])]
+          (log/log :debug :events texture)
+          (.draw batch texture (:x entity) (:y entity)))))
     (.end batch)
     (.begin batch)
     (. font draw batch text (float 200) (float 200))

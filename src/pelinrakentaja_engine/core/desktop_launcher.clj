@@ -21,10 +21,7 @@
   (events/register-handler :entities/update-entities-with-fn core-events/update-entities-with-fn)
 
   (events/register-listener :engine/status [:engine :status] core-listeners/engine-status)
-  (events/register-listener
-   :resources/resource-load-queue
-   [:engine :graphics :resource-load-queue]
-   core-listeners/resource-load-queue)
+  (events/register-listener :resources/resource-load-queue [:engine :graphics :resource-load-queue] core-listeners/resource-load-queue)
   (events/register-listener :input/pressed-keys [:input :keys] core-listeners/pressed-keys)
   (events/register-listener :engine/render-queue [:engine :graphics :render-queue] core-listeners/render-queue)
   (events/register-listener :engine/renderable-entities [:engine :entities] core-listeners/renderable-entities)

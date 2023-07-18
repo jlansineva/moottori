@@ -17,9 +17,9 @@
                    (update :x float)
                    (update :y float)
                    (assoc :id (keyword (gensym (name (:type entity))))))]
-    (log/log :debug :add-entity @engine-state)
-    (when (get-in @engine-state [:resources :texture (:type entity)])
-      to-add)))
+    (log/log :debug :add-entity to-add)
+    #_(when (get-in @engine-state [:resources :texture (:type entity)]))
+    to-add))
 
 (defn create-entities
   [& entities]
