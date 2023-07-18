@@ -8,6 +8,8 @@
                     :engine/lifecycle})
 (def enabled-log-levels #{:all :important :debug :info})
 
+(def ignore-log-from #{:event/dispatch})
+
 (def log-queue (atom []))
 
 (defn print-logs
@@ -21,6 +23,7 @@
 (defn log
   [log-level logger & params]
   (when (and
+         (not (logger ignore-log-from))
          (or (logger enabled-logs)
              (:all enabled-logs))
          (or (log-level enabled-log-levels)
