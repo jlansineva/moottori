@@ -15,8 +15,13 @@
 
 (defn resource-load-queue
   [substate]
-  (when-not (empty? substate)
-    substate))
+  (let [queue (:resource-load-queue substate)]
+    (when-not (empty? queue)
+      queue)))
 
 (def render-queue identity)
 (def renderable-entities identity)
+
+(defn resource-loaded?
+  [substate type id]
+  (some? (get-in substate [type id])))
