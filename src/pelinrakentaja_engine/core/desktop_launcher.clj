@@ -19,7 +19,7 @@
   (events/register-handler :engine/cleanup core-events/engine-cleanup)
   (events/register-handler :resources/load-resource core-events/load-resource)
   (events/register-handler :resources/resource-loaded core-events/resource-loaded)
-  (events/register-handler :entities/update-entity-id core-events/update-entity-id)
+  (events/register-handler :entities/update-entity-id-properties core-events/update-entity-id-properties)
   (events/register-handler :entities/update-entity-id-with-fn core-events/update-entity-id-with-fn)
   (events/register-handler :entities/update-entities-with-fn core-events/update-entities-with-fn)
 

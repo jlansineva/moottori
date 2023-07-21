@@ -42,23 +42,6 @@
           state
           entities))
 
-(defn find-and-update-entity
-  [entities entity-id modifier-fn]
-  (loop [current (first entities)
-         remaining (rest entities)
-         processed []]
-
-    (cond (nil? current)
-          processed
-
-          (= (:id current) entity-id)
-          (vec (concat processed [(modifier-fn current)] remaining))
-
-          :else
-          (recur (first remaining)
-                 (rest remaining)
-                 (conj processed current)))))
-
 (defn update-entity-id-with-fn
   [state entity-id modifier-fn]
   (log/log :debug :event-handlers/update-entity-id-with-fn entity-id)
@@ -66,12 +49,14 @@
              [:engine :entities entity-id]
              modifier-fn))
 
-(defn update-entity-id
-  [state entity-id entity]
+(defn update-entity-id-properties
+  [state entity-id entity properties]
   (log/log :debug :event-handlers/update-entity-with-id entity-id)
-  (update-in state
-             [:engine :entities entity-id]
-             (constantly entity)))
+  (let [old-entity (get-in state [:engine :entities entity-id])
+        updated-entity (merge old-entity (select-keys entity properties))]
+    (assoc-in state
+              [:engine :entities entity-id]
+              updated-entity)))
 
 (defn update-entities-with-fn
   [state fn]
