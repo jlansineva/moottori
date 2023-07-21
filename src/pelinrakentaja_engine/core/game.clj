@@ -7,6 +7,7 @@
             [pelinrakentaja-engine.utils.log :as log])
   (:import [com.badlogic.gdx Gdx ApplicationAdapter]
            [com.badlogic.gdx.graphics GL20 OrthographicCamera]
+           [com.badlogic.gdx.utils.viewport ExtendViewport]
            [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]))
 
 (gen-class
@@ -21,48 +22,54 @@
 
 (defn -render
   [^ApplicationAdapter this]
-  (let [{:keys [camera batch]} @game-data
-        font (BitmapFont.)
-        text "Testing"
+  (let [{:keys [camera batch viewport]} @game-data
         resource-load-queue (resource-queue-listener)
         render-q (render-queue)
         entities (renderable-entities)]
     (when resource-load-queue
-      (let [{:keys [id path]} (first resource-load-queue)]
-        (textures/load-texture-from-resource id path)))
-    (log/log :debug :events render-q)
+      (let [{:keys [id path type]} (first resource-load-queue)]
+        (log/log :debug :resource id path)
+        (events/direct-state-access [:resources/load-resource id path type])))
+    #_(log/log :debug :events render-q)
+    (set! (.-x (.-position camera)) (-> viewport
+                                        .getWorldWidth
+                                        (/ 2)
+                                        (- 2)))
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
     (.update camera)
     (.setProjectionMatrix batch (.-combined camera))
     (.begin batch)
     (doseq [entity-id render-q]
-      (let [{{:keys [width height]
-              tex-x :x
-              tex-y :y} :texture :as entity} (get entities entity-id)]
-        (when-let [texture (get-in @state/engine-state [:resources :texture (:type entity)])]
-          (log/log :debug :events texture)
-          (.setRegion texture
-                      (or tex-x 0) (or tex-y 0)
-                      (or width (-> texture .getTexture .getWidth))
-                      (or height (-> texture .getTexture .getHeight)))
-          (.draw batch texture (:x entity) (:y entity)))))
-    (.end batch)
-    (.begin batch)
-    (. font draw batch text (float 200) (float 200))
+      (let [{{:keys [width height]} :texture ;; TODO: implement scale and rotation
+             {_scale-x :x _scale-y :y} :scale
+             ent-x :x
+             ent-y :y :as entity
+             :keys [_rotation]} (get entities entity-id)]
+        (when-let [textureregion (get-in @state/engine-state [:resources :texture (:type entity)])]
+          ;;          (log/log :debug :events :w width :h height :tx tex-x :ty tex-y)
+          (.draw batch
+                 (.getTexture textureregion)
+                 ent-x ent-y
+                 width height
+                 0 0
+                 width height))))
     (.end batch)))
 
 (defn -create
   [^ApplicationAdapter this]
   (log/log :debug :engine/lifecycle "creating")
-  (let [cam-w (.getWidth (. Gdx -graphics))
-        cam-h (.getHeight (. Gdx -graphics))
-        camera (OrthographicCamera. 100, (* 100 (/ cam-h cam-w)))
+  (let [cam-w 96 ;; y = 28, x = 92
+        cam-h 64
+        camera (OrthographicCamera.)
+        viewport (ExtendViewport. cam-w cam-h camera)
         sprite-batch (SpriteBatch.)]
     (.setInputProcessor (. Gdx -input) (input/create-input-adapter))
-    (.setToOrtho camera false cam-w cam-h) ;; TODO something sensible to these, maybe use a viewport
+    (.apply viewport)
+    (.update camera)
     (swap! game-data assoc
            :camera camera
+           :viewport viewport
            :batch sprite-batch)
     (events/force [:engine/initialize])))
 
@@ -74,3 +81,7 @@
   [^ApplicationAdapter this]
   (events/dispatch [:engine/cleanup])
   (log/log :debug :engine/lifecycle "disposed"))
+
+(defn -resize
+  [^ApplicationAdapter this width height]
+  (.update (:viewport @game-data) width height))
