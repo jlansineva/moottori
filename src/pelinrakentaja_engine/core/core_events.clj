@@ -1,12 +1,13 @@
 (ns pelinrakentaja-engine.core.core-events
   (:require [pelinrakentaja-engine.utils.log :as log]
-            [pelinrakentaja-engine.core.entities :as entities]))
+            [pelinrakentaja-engine.core.entities :as entities]
+            [pelinrakentaja-engine.core.graphics.textures :as textures]))
 
 (defn load-texture
   "Loading of the texture resources have to be done from within the libGDX-thread, so resources
   have to be added to a queue."
   [state {:keys [type texture] :as entity}]
-  (update-in state [:engine :graphics :resource-load-queue] conj {:id type :path texture}))
+  (update-in state [:engine :graphics :resource-load-queue] conj {:id type :path texture :type :texture}))
 
 (def supported-resources #{:texture})
 
@@ -14,10 +15,15 @@
   "Takes the first resource off the resource load queue"
   [state resource-type resource-id resource]
   {:pre [(supported-resources resource-type)]}
+  (log/log :debug :resource-loaded resource-id (get-in state [:engine :graphics :resource-load-queue]))
   (-> state
       (assoc-in [:resources resource-type resource-id] resource)
-      (update-in [:engine :graphics :resource-load-queue] rest)
-      (update-in [:engine :graphics :resource-load-queue] vec)))
+      (update-in [:engine :graphics :resource-load-queue] (comp vec rest))))
+
+(defn load-resource
+  [state id path type]
+  (let [region (textures/load-texture-from-resource id path)]
+    (resource-loaded state type id region)))
 
 (defn add-entity
   [state entity]
