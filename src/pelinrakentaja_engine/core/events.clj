@@ -67,11 +67,11 @@
   "If a listener is registered and the path is affected, the listener is called with the new state"
   [listener-id]
   (fn -listener
-    []
+    [& params]
     (if-let [l (get-in @event-queue [:listeners :fns listener-id])]
       (let [path (get l :path)
             listener-fn (get l :fn)
-            returnable (listener-fn (get-in @state/engine-state path))]
+            returnable (apply listener-fn (get-in @state/engine-state path) params)]
         #_(when (get-in @event-queue [:affected listener-id]))
         returnable)
       (when (get-in @state/engine-state [:engine :status :initialized?])
@@ -118,6 +118,12 @@
    (log/log :debug :event/queue-update "updating queue")
    (when (or (get-in @state/engine-state [:engine :status :initialized?]) force?)
      (swap! event-queue process-next-event))))
+
+(defn direct-state-access
+  [[event & params]]
+  (let [handler-fn (get-in @event-queue [:handlers event])]
+    (prn :> :debug :direct-access event params (get-in @event-queue [:handlers]))
+    (apply handler-fn params)))
 
 (defn force
   [event]
