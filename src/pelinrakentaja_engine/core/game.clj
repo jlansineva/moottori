@@ -47,11 +47,10 @@
              ent-y :y :as entity
              :keys [_rotation]} (get entities entity-id)]
         (when-let [textureregion (get-in @state/engine-state [:resources :texture (:type entity)])]
-          ;;          (log/log :debug :events :w width :h height :tx tex-x :ty tex-y)
           (.draw batch
                  (.getTexture textureregion)
-                 ent-x ent-y
-                 width height
+                 ent-x (- 28 ent-y) ;; <todo fix
+                 width (- height)
                  0 0
                  width height))))
     (.end batch)))
