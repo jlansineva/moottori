@@ -5,7 +5,8 @@
    {:status {:initialized? false
              :ready? false
              :cleanup? false}
-    :graphics {:render-queue []}}
+    :graphics {:render-queue []
+               :resource-load-queue []}}
    :entities {}})
 
 (defonce engine-state (atom initial-state))
