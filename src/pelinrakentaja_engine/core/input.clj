@@ -5,7 +5,6 @@
 
 (defn create-input-adapter
   []
-  (prn :create-input-adapter)
   (proxy [InputAdapter] []
     (keyDown [key-code]
       (log/log :debug :input-adapter/key-down key-code)

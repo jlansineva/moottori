@@ -122,7 +122,6 @@
 (defn direct-state-access
   [[event & params]]
   (let [handler-fn (get-in @event-queue [:handlers event])]
-    (prn :> :debug :direct-access event params (get-in @event-queue [:handlers]))
     (apply handler-fn params)))
 
 (defn force
