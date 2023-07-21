@@ -13,10 +13,12 @@
   and dispatch entity-events."
   (:require [pelinrakentaja-engine.core.desktop-launcher :as launcher]
             [pelinrakentaja-engine.core.events :as events]
-            [pelinrakentaja-engine.utils.log :as log]))
+            [pelinrakentaja-engine.utils.log :as log]
+            [pelinrakentaja-engine.utils.nrepl :as nrepl]))
 
 (defn initialize-window
   [title]
+  (nrepl/launch-nrepl)
   (launcher/setup-window title))
 
 (defmacro game-loop
