@@ -62,6 +62,11 @@
   [state fn]
   (update-in state [:engine :entities] fn))
 
+(defn update-entities-id-properties
+  [state & entities]
+  (reduce (fn [state [entity-id entity properties]]
+            (update-entity-id-properties state entity-id entity properties)) state entities))
+
 (defn engine-cleanup
   [state]
   (log/log :debug :event-handlers/engine-cleanup state)

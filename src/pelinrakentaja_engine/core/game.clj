@@ -49,7 +49,7 @@
         (when-let [textureregion (get-in @state/engine-state [:resources :texture (:type entity)])]
           (.draw batch
                  (.getTexture textureregion)
-                 ent-x (- 28 ent-y) ;; <todo fix
+                 ent-x (- 28 ent-y) ;; <todo fix - this needs to be toggled somehow
                  width (- height)
                  0 0
                  width height))))

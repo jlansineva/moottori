@@ -19,7 +19,7 @@
 (defn initialize-window
   [title]
   (nrepl/launch-nrepl)
-  (launcher/setup-window title))
+  (launcher/setup-window {:title title}))
 
 (defmacro game-loop
   [& body]

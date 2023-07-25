@@ -2,7 +2,8 @@
   (:require [pelinrakentaja-engine.core.game :refer :all]
             [pelinrakentaja-engine.core.core-events :as core-events]
             [pelinrakentaja-engine.core.core-listeners :as core-listeners]
-            [pelinrakentaja-engine.core.events :as events])
+            [pelinrakentaja-engine.core.events :as events]
+            [pelinrakentaja-engine.config :as config])
   (:import [com.badlogic.gdx.backends.lwjgl3 Lwjgl3Application Lwjgl3ApplicationConfiguration]
            [com.badlogic.gdx.graphics.glutils HdpiMode]
            #_[org.lwjgl3.input Keyboard])
@@ -22,6 +23,7 @@
   (events/register-handler :entities/update-entity-id-properties core-events/update-entity-id-properties)
   (events/register-handler :entities/update-entity-id-with-fn core-events/update-entity-id-with-fn)
   (events/register-handler :entities/update-entities-with-fn core-events/update-entities-with-fn)
+  (events/register-handler :entities/update-entities-id-properties core-events/update-entities-id-properties)
 
   (events/register-listener :engine/status [:engine :status] core-listeners/engine-status)
   (events/register-listener :resources/resource-load-queue [:engine :graphics] core-listeners/resource-load-queue)
@@ -33,7 +35,7 @@
     (.setTitle config (or title "Game"))
     (.setResizable config false)
     (.setHdpiMode config HdpiMode/Logical)
-    (.setWindowedMode config (or width 800) (or height 600))
+    (.setWindowedMode config (or width config/window-default-x) (or height config/window-default-y))
     (Lwjgl3Application. (pelinrakentaja-engine.core.game.Game.) config)))
 
 (defn -main []
