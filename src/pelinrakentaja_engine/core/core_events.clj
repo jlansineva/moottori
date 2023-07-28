@@ -30,8 +30,8 @@
   {:pre [(some? (:x entity))
          (some? (:y entity))
          (some? (:type entity))]}
-  (log/log :debug :event-handlers/add-entity entity)
   (let [new-entity (entities/create-entity entity)]
+    (log/log :debug :event-handlers/add-entity entity)
     (cond-> state
         new-entity (update-in [:engine :graphics :render-queue] conj (:id new-entity))
         new-entity (assoc-in [:engine :entities (:id new-entity)] new-entity))))
@@ -66,6 +66,17 @@
   [state & entities]
   (reduce (fn [state [entity-id entity properties]]
             (update-entity-id-properties state entity-id entity properties)) state entities))
+
+(defn remove-entity-with-id
+  [state entity-id]
+  (-> state
+      (update-in [:engine :entities] dissoc entity-id)
+      (update-in [:engine :graphics :render-queue] #(vec (remove (fn [id] (= id entity-id)) %)))))
+
+(defn remove-entities-with-ids
+  [state & entities]
+  (log/log :debug :event-handlers/remove-entities-with-ids entities)
+  (reduce remove-entity-with-id state entities))
 
 (defn engine-cleanup
   [state]

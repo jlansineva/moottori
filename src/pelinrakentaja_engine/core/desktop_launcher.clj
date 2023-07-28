@@ -24,6 +24,8 @@
   (events/register-handler :entities/update-entity-id-with-fn core-events/update-entity-id-with-fn)
   (events/register-handler :entities/update-entities-with-fn core-events/update-entities-with-fn)
   (events/register-handler :entities/update-entities-id-properties core-events/update-entities-id-properties)
+  (events/register-handler :entities/remove-entity-with-id core-events/remove-entity-with-id)
+  (events/register-handler :entities/remove-entities-with-ids core-events/remove-entities-with-ids)
 
   (events/register-listener :engine/status [:engine :status] core-listeners/engine-status)
   (events/register-listener :resources/resource-load-queue [:engine :graphics] core-listeners/resource-load-queue)
