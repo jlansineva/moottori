@@ -1,11 +1,18 @@
-(ns pelinrakentaja-engine.config)
+(ns pelinrakentaja-engine.config
+  (:require [clojure.java.io :as io]
+            [clojure.edn :as edn]))
 
-;; TODO placehodler, need to implement some sort of loading
-(def world-scale-x 16)
-(def world-scale-y 16)
+;; internal, from current path
+(def internal-config (edn/read-string (slurp (io/resource "config-internal.edn"))))
+(def override-config (edn/read-string (slurp (io/resource "config.edn"))))
+(def final-config (merge internal-config override-config))
 
-(def window-x 1024)
-(def window-y 768)
+(def config (atom final-config))
 
-(def window-default-x 1024)
-(def window-default-y 768)
+(defn get-config
+  [key]
+  (get @config key))
+
+(defn set-config
+  [key val]
+  (swap! config assoc key val))
