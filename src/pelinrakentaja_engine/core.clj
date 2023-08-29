@@ -17,8 +17,9 @@
             [pelinrakentaja-engine.utils.nrepl :as nrepl]))
 
 (defn initialize-window
-  [title]
-  (nrepl/launch-nrepl)
+  [{:keys [repl? title]}]
+  (when repl?
+    (nrepl/launch-nrepl))
   (launcher/setup-window {:title title}))
 
 (defmacro game-loop
