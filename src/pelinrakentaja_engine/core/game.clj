@@ -1,9 +1,9 @@
 (ns pelinrakentaja-engine.core.game
-  (:require [pelinrakentaja-engine.core.state :as state]
+  (:require [pelinrakentaja-engine.config :as config]
+            [pelinrakentaja-engine.core.state :as state]
             [pelinrakentaja-engine.core.input :as input]
             [pelinrakentaja-engine.core.events :as events]
             [pelinrakentaja-engine.core.graphics.textures :as textures]
-
             [pelinrakentaja-engine.utils.log :as log])
   (:import [com.badlogic.gdx Gdx ApplicationAdapter]
            [com.badlogic.gdx.graphics GL20 OrthographicCamera]
@@ -29,8 +29,9 @@
     (when resource-load-queue
       (let [{:keys [id path type]} (first resource-load-queue)]
         (log/log :debug :resource id path)
-        (events/direct-state-access [:resources/load-resource id path type])))
+        (events/direct-state-access [:resources/load-resource-file id path type])))
     #_(log/log :debug :events render-q)
+    ;; TODO: camera should be its own entity that is controlled from outside
     (set! (.-x (.-position camera)) (-> viewport
                                         .getWorldWidth
                                         (/ 2)
@@ -49,7 +50,7 @@
         (when-let [textureregion (get-in @state/engine-state [:resources :texture (:type entity)])]
           (.draw batch
                  (.getTexture textureregion)
-                 ent-x (- 28 ent-y) ;; <todo fix - this needs to be toggled somehow
+                 ent-x (- (config/get-config :world-height) ent-y) ;; <todo fix - this needs to be toggled somehow
                  width (- height)
                  0 0
                  width height))))
@@ -58,8 +59,8 @@
 (defn -create
   [^ApplicationAdapter this]
   (log/log :debug :engine/lifecycle "creating")
-  (let [cam-w 96 ;; y = 28, x = 92
-        cam-h 64
+  (let [cam-w (config/get-config :cam-width) ;; y = 28, x = 92
+        cam-h (config/get-config :cam-height)
         camera (OrthographicCamera.)
         viewport (ExtendViewport. cam-w cam-h camera)
         sprite-batch (SpriteBatch.)]

@@ -1,7 +1,26 @@
 (ns pelinrakentaja-engine.core.core-events
   (:require [pelinrakentaja-engine.utils.log :as log]
             [pelinrakentaja-engine.core.entities :as entities]
-            [pelinrakentaja-engine.core.graphics.textures :as textures]))
+            [pelinrakentaja-engine.core.graphics.textures :as textures]
+            [pelinrakentaja-engine.core.audio :as audio]))
+
+(defn load-resource
+  "General loading method for resources"
+  [state resource]
+  {:pre [(some? (:type resource))
+         (or (some? (:texture resource))
+             (some? (:music resource))
+             (some? (:sfx resource)))]}
+  (let [resource-type (cond
+                        (some? (:texture resource)) :texture
+                        (some? (:music resource)) :music
+                        (some? (:sfx resource)) :sfx)]
+    (update-in state
+               [:engine :graphics :resource-load-queue]
+               conj
+               {:id (:type resource)
+                :path (get resource resource-type)
+                :type resource-type})))
 
 (defn load-texture
   "Loading of the texture resources have to be done from within the libGDX-thread, so resources
@@ -9,21 +28,26 @@
   [state {:keys [type texture] :as entity}]
   (update-in state [:engine :graphics :resource-load-queue] conj {:id type :path texture :type :texture}))
 
-(def supported-resources #{:texture})
+(def supported-resources #{:texture :music :sfx})
 
 (defn resource-loaded
   "Takes the first resource off the resource load queue"
   [state resource-type resource-id resource]
   {:pre [(supported-resources resource-type)]}
   (log/log :debug :resource-loaded resource-id (get-in state [:engine :graphics :resource-load-queue]))
-  (-> state
-      (assoc-in [:resources resource-type resource-id] resource)
-      (update-in [:engine :graphics :resource-load-queue] (comp vec rest))))
+  #_(log/log :debug :resource-loaded resource-id (get-in state [:resources]))
+  #_(log/log :debug :resource-loaded resource-id resource resource-type)
+  (cond-> state
+        (some? resource) (assoc-in [:resources resource-type resource-id] resource)
+        true (update-in [:engine :graphics :resource-load-queue] (comp vec rest))))
 
-(defn load-resource
+(defn load-resource-file
   [state id path type]
-  (let [region (textures/load-texture-from-resource id path)]
-    (resource-loaded state type id region)))
+  (let [resource-file (case type
+                        :texture (textures/load-texture-from-resource id path)
+                        :music (audio/load-music-from-resources id path)
+                        :sfx (audio/load-sfx-from-resources id path))]
+    (resource-loaded state type id resource-file)))
 
 (defn add-entity
   [state entity]

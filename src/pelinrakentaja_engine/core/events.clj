@@ -115,7 +115,7 @@
   ([]
    (update-queue false))
   ([force?]
-   (log/log :debug :event/queue-update "updating queue")
+   (log/log :debug :event/queue-update "updating queue" (or (get-in @state/engine-state [:engine :status :initialized?]) force?))
    (when (or (get-in @state/engine-state [:engine :status :initialized?]) force?)
      (swap! event-queue process-next-event))))
 

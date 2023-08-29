@@ -9,7 +9,7 @@
 
 (defn load-texture-from-resource
   [id path]
-  (log/log :debug :id id :path path)
+  (log/log :debug :load-texture-from-resource :id id :path path)
   (when-not (resource-loaded? :texture id)
     (let [texture (Texture. (.internal (. Gdx -files) path))
           _ (.setWrap texture Texture$TextureWrap/Repeat Texture$TextureWrap/Repeat)]

@@ -8,7 +8,7 @@
                     :engine/lifecycle})
 (def enabled-log-levels #{:all :important :debug :info})
 
-(def ignore-log-from #{:event/dispatch})
+(def ignore-log-from #{:event/dispatch :game/update-items :add-entity})
 
 (def log-queue (atom []))
 
