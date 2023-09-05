@@ -41,8 +41,8 @@
     (.setResizable configuration false)
     (.setHdpiMode configuration HdpiMode/Logical)
     (.setWindowedMode configuration
-                      (or width (:window-default-x config/config))
-                      (or height (:window-default-y config/config)))
+                      (or width (config/get-config :window-default-x))
+                      (or height (config/get-config :window-default-y)))
     (Lwjgl3Application. (pelinrakentaja-engine.core.game.Game.) configuration)))
 
 (defn -main []
