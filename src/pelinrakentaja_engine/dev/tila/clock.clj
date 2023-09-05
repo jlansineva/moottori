@@ -1,12 +1,12 @@
 (ns pelinrakentaja-engine.dev.tila.clock)
 
 (defn update-elapsed-time
-  [self-id state]
+  [self-id required state]
   (update-in state [:entities :data self-id]
              (fn [{:keys [current-millis elapsed-time] :as clock}]
                (let [elapsed (System/currentTimeMillis)
                      current-millis (if (= 0 current-millis) elapsed current-millis)
-                     delta (- elapsed current-millis)]
+                     delta (/ (- elapsed current-millis) 1000)]
                  (assoc clock
                         :last-millis current-millis
                         :current-millis elapsed
@@ -14,7 +14,7 @@
                         :delta-time delta)))))
 
 (defn update-last-time
-  [self-id state]
+  [self-id required state]
   (update-in state [:entities :data self-id]
              (fn [{:keys [current-millis] :as clock}]
                (let [elapsed (System/currentTimeMillis)]
@@ -53,3 +53,13 @@
                          :stopped {:effect :no-op
                                    :transitions [{:when [::start]
                                                   :switch :running}]}}})
+
+(def clock-entity {:current-millis 0
+                   :last-millis 0
+                   :id :clock
+                   :delta-time 0
+                   :elapsed-time 0
+                   :started? true
+                   :paused? false
+                   :unpause? false
+                   :stop? false})

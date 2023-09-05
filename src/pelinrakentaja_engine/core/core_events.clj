@@ -75,9 +75,9 @@
 
 (defn update-entity-id-properties
   [state entity-id entity properties]
-  (log/log :debug :event-handlers/update-entity-with-id entity-id)
   (let [old-entity (get-in state [:engine :entities entity-id])
         updated-entity (merge old-entity (select-keys entity properties))]
+    (log/log :debug :event-handlers/update-entity-with-id entity-id entity properties old-entity updated-entity)
     (assoc-in state
               [:engine :entities entity-id]
               updated-entity)))
