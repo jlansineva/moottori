@@ -44,18 +44,18 @@
                                               :switch :idle}]}}}})
 
 (def effects (atom {:no-op (fn [_self state] state)}))
-(def evaluations (atom {}))
+(def evaluations (atom {:true (constantly true)}))
 
 (defn apply-post-effect
   "Post-effect is an effect that is applied immediatly after a behavior transition"
-  [fsm state]
-  (prn :apply-post fsm)
+  [{:keys [fsm require-data] :as fsm-struct} state]
+ ; (prn :apply-post fsm)
   (let [effect-id (get-in fsm [:current :post-effect])]
     (if effect-id
       (let [effect (get @effects effect-id)]
-        (prn :apply-post-effect effect-id)
+      ;  (prn :apply-post-effect effect-id)
         {:fsm (update-in fsm [:current] dissoc :post-effect)
-         :state (effect (:id fsm) state)})
+         :state (effect (:id fsm) (require-data fsm-struct state) state)})
       {:fsm fsm :state state})))
 
 (defn update-entity-behaviors
@@ -64,8 +64,8 @@
   Runs through transitions for current FSM state on the signal and returns a new FSM state"
   [fsm state]
   #_(log/log :update-entity-behaviors fsm)
-  (prn :> fsm)
-  (prn :state> state)
+;  (prn :> fsm)
+;  (prn :state> state)
   (let [{:keys [current states pre]} fsm
         current-state-id (:state current)
                                         ; _ (log/log :debug :update-entity-behaviors current-state-id)
@@ -81,7 +81,7 @@
                              (every? true? (when-fn state)))
                        transition
                        (recur (first transitions) (rest transitions) state)))]
-    (prn :> :transitioned)
+    (prn :> :transitioned transition)
     (if (some? transition)
       (do
         (prn :debug :update-entity-behaviors-> current-state-id :-> (:switch transition))
@@ -92,25 +92,24 @@
       fsm)))
 
 (defn apply-behavior
-  [fsm state]
+  [{:keys [fsm require-data] :as fsm-struct} state]
   (let [effect-id (get-in fsm [:current :effect])
         effect (get @effects effect-id)]
                                         ;  (log/log :debug :apply-behavior effect-id)
     ;; TODO when there is no effect, throw or something
-    (effect (:id fsm) state)))
+    (effect (:id fsm) (require-data fsm-struct state) state)))
 
 (defn when-with-juxt
   "TODO: some kind of indication if a evaluation is not found"
   [fn-ids]
-  (prn :when-with-juxt> fn-ids)
+;  (prn :when-with-juxt> fn-ids)
   (let [fns (map #(comp boolean (get @evaluations %)) fn-ids)]
     (apply juxt fns)))
 
 (defn juxtapose
   "Process all transitions and compile them into a function"
   [transitions]
-  (prn :juxtapose> transitions
-   )
+;  (prn :juxtapose> transitions)
   (mapv #(update % :when when-with-juxt)
         transitions))
 
@@ -120,14 +119,14 @@
   Takes evaluations per the keywords given in transitions :when -keyword
   and applies juxt"
   [[state-id state-properties]]
-  (prn :transitions-with-juxtapositions> state-id state-properties)
+;  (prn :transitions-with-juxtapositions> state-id state-properties)
   [state-id (update state-properties
               :transitions
               juxtapose)])
 
 (defn update-fsm-states
   [states]
-  (prn :update-fsm-states> states)
+;  (prn :update-fsm-states> states)
   (into {}
     (map transitions-with-juxtapositions)
     states))
@@ -156,6 +155,12 @@
 (comment :state :-> :require :->
 
          )
+(defn create-fsm
+  [fsm-initial]
+  (-> fsm-initial
+      (update-in [:pre :transitions] juxtapose)
+      (update :states update-fsm-states)))
+
 (defn process-fsm
   [fsm-initial]
   {:pre [(some? (:id fsm-initial))]}
@@ -177,50 +182,53 @@
                   {}
                   (:require fsm-initial))]
     (prn :requires> requires)
-    {:fsm (-> fsm-initial
-              (update-in [:pre :transitions] juxtapose)
-              (update :states update-fsm-states))
+    {:fsm (create-fsm fsm-initial)
      :requires requires
      :self (partial require-by-id (:id fsm-initial))
+     :apply-effect (fn [fsm-struct state]
+                     (apply-behavior fsm-struct state))
+     :require-data (fn [{:keys [requires]} state]
+                     (reduce (fn [c r] (assoc c r ((r requires) state))) {} (keys requires)))
      :update (fn [fsm-struct state]
-               (let [{:keys [fsm requires self]} fsm-struct
+               (let [{:keys [fsm require-data self]} fsm-struct
                      self-data (self state)
-                     required-data (reduce (fn [c r] (assoc c r ((r requires) state))) {} (keys requires))
+                     required-data (require-data fsm-struct state)
                      new-fsm (update-entity-behaviors fsm {:self self-data :required required-data})
-                     {:keys [fsm state]} (apply-post-effect new-fsm state)]
-                 {:fsm (assoc fsm-struct :fsm fsm)
+                     updated-struct (assoc fsm-struct :fsm new-fsm)
+                     {:keys [fsm state]} (apply-post-effect updated-struct state)]
+                 {:fsm (assoc updated-struct :fsm fsm)
                   :state state}))}))
 
 (defn register-behavior
-  [fsm new-effects new-evaluations]
+  [entity fsm new-effects new-evaluations]
   (swap! effects merge new-effects)
   (swap! evaluations merge new-evaluations)
-  (process-fsm fsm))
+  (process-fsm (assoc fsm :id (:id entity))))
 
-(comment (register-behavior {:require [[:type :guard] [:type :shopper]]
-                             :id :player
-                             :pre {:transitions [{:when [:dead :initialized]
-                                                  :switch :dead}]}
-                             :current {:state :waiting-for-init
-                                       :effect :no-op}
-                             :last {:state nil}
-                             :states {:dead {:effect :dead
-                                             :transitions []}
-                                      :waiting-for-init {:effect :no-op
-                                                         :transitions [{:when [:found]
-                                                                        :switch :idle
-                                                                        :post-effect :initialize}]}
-                                      :idle {:effect :no-op
-                                             :transitions [{:when [:a]
-                                                            :switch :state-a}]}
-                                      :state-a {:effect :effect-a
-                                                :transitions [{:when [:b]
-                                                               :switch :state-b}]}
-                                      :state-b {:effect :effect-b
-                                                :transitions [{:when [:c]
-                                                               :switch :state-c}]}
-                                      :state-c {:effect :effect-c
-                                                :transitions []}}}
+(comment (register-behavior {} {:require [[:type :guard] [:type :shopper]]
+                                :id :player
+                                :pre {:transitions [{:when [:dead :initialized]
+                                                     :switch :dead}]}
+                                :current {:state :waiting-for-init
+                                          :effect :no-op}
+                                :last {:state nil}
+                                :states {:dead {:effect :dead
+                                                :transitions []}
+                                         :waiting-for-init {:effect :no-op
+                                                            :transitions [{:when [:found]
+                                                                           :switch :idle
+                                                                           :post-effect :initialize}]}
+                                         :idle {:effect :no-op
+                                                :transitions [{:when [:a]
+                                                               :switch :state-a}]}
+                                         :state-a {:effect :effect-a
+                                                   :transitions [{:when [:b]
+                                                                  :switch :state-b}]}
+                                         :state-b {:effect :effect-b
+                                                   :transitions [{:when [:c]
+                                                                  :switch :state-c}]}
+                                         :state-c {:effect :effect-c
+                                                   :transitions []}}}
 
                             {:effect-a #(do (prn :effect-a) (assoc % :a :done))
                              :effect-b #(do (prn :effect-b) (assoc % :b :done))
@@ -256,7 +264,7 @@
 
          (defn update-and-apply [fsm state]
            (let [{:keys [fsm state]} ((:update fsm) fsm state)
-                 new-state (apply-behavior (:fsm fsm) state)]
+                 new-state (apply-behavior fsm state)]
              {:fsm fsm :state new-state}))
 
          (defn update-and-apply-n-times [f s n]
