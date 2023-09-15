@@ -91,10 +91,18 @@
             (assoc-in [:current :post-effect] (:post-effect transition))))
       fsm)))
 
+(defn create-effect-function
+  [effect]
+  {:pre [(or (vector? effect)
+             (keyword? effect))]}
+  (if (vector? effect)
+    (apply comp (mapv #(get @effects %) (rseq effect)))
+    (get @effects effect)))
+
 (defn apply-behavior
   [{:keys [fsm require-data] :as fsm-struct} state]
   (let [effect-id (get-in fsm [:current :effect])
-        effect (get @effects effect-id)]
+        effect (create-effect-function effect-id)]
                                         ;  (log/log :debug :apply-behavior effect-id)
     ;; TODO when there is no effect, throw or something
     (effect (:id fsm) (require-data fsm-struct state) state)))
