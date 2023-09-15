@@ -43,7 +43,7 @@
                                              {:when [::item-picked ::potions-available]
                                               :switch :idle}]}}}})
 
-(def effects (atom {:no-op (fn [_self state] state)}))
+(def effects (atom {:no-op (fn [_self _required state] state)}))
 (def evaluations (atom {:true (constantly true)}))
 
 (defn apply-post-effect
@@ -69,22 +69,22 @@
   (let [{:keys [current states pre]} fsm
         current-state-id (:state current)
                                         ; _ (log/log :debug :update-entity-behaviors current-state-id)
-        _ (prn :> current-state-id)
+  ;      _ (prn :> current-state-id)
         pre-transitions (get-in pre [:transitions])
         transitions (into [] (concat pre-transitions (get-in states [current-state-id :transitions])))
         transition (loop [{when-fn :when :as transition} (first transitions)
                           transitions (rest transitions)
                           state state]
                                         ;         (log/log :debug :transitioning transition)
-                     (prn :> :transitioning transition transitions)
+ ;                    (prn :> :transitioning transition)
                      (if (or (nil? transition)
                              (every? true? (when-fn state)))
                        transition
                        (recur (first transitions) (rest transitions) state)))]
-    (prn :> :transitioned transition)
+;    (prn :> :transitioned transition)
     (if (some? transition)
       (do
-        (prn :debug :update-entity-behaviors-> current-state-id :-> (:switch transition))
+;        (prn :debug :update-entity-behaviors-> current-state-id :-> (:switch transition))
         (-> fsm
             (assoc-in [:current :state] (:switch transition))
             (assoc-in [:current :effect] (get-in fsm [:states (:switch transition) :effect]))
@@ -134,22 +134,22 @@
 (defn require-by-id
   [require state]
   {:pre [(keyword? require)]}
-  (prn :req-id> require)
+;  (prn :req-id> require)
   (get-in state [:entities :data require]))
 
 (defn require-by-type
   [require state]
   {:pre [(keyword? require)]}
-  (prn :req-type> require)
+;  (prn :req-type> require)
   (let [type-ids (get-in state [:entities :type->entities require])]
-    (reduce (fn [acc curr]
-              (assoc acc curr (get-in state [:entities :data curr])))
+     (reduce (fn [acc curr]
+               (assoc acc curr (get-in state [:entities :data curr])))
             {}
             type-ids)))
 
 (defn require-by-path
   [require state]
-  {:pre [(vector? require)]}
+;  {:pre [(vector? require)]}
   (get-in state require))
 
 (comment :state :-> :require :->
@@ -160,6 +160,29 @@
   (-> fsm-initial
       (update-in [:pre :transitions] juxtapose)
       (update :states update-fsm-states)))
+
+(defn apply-effect-fn
+  [fsm-struct state]
+ ; (prn :afe> (-> fsm-struct :fsm :id))
+  (apply-behavior fsm-struct state))
+
+(defn require-data-fn
+  [{:keys [requires]} state]
+  (reduce (fn [c r]
+            (let [require-fn (get requires r)]
+              (assoc c r (require-fn state))))
+          {} (keys requires)))
+
+(defn update-fn
+  [fsm-struct state]
+  (let [{:keys [fsm require-data self]} fsm-struct
+        self-data (self state)
+        required-data (require-data fsm-struct state)
+        new-fsm (update-entity-behaviors fsm {:self self-data :required required-data})
+        updated-struct (assoc fsm-struct :fsm new-fsm)
+        {:keys [fsm state]} (apply-post-effect updated-struct state)]
+    {:fsm (assoc updated-struct :fsm fsm)
+     :state state}))
 
 (defn process-fsm
   [fsm-initial]
@@ -177,7 +200,7 @@
 
                       (and (vector? require)
                            (= (first require)
-                              :path))
+                              :path)) ;; TODO: figure out pathing (maybe provide 3rd parameter for key)
                       (assoc collected (second require) (partial require-by-path (second require)))))
                   {}
                   (:require fsm-initial))]
@@ -185,19 +208,9 @@
     {:fsm (create-fsm fsm-initial)
      :requires requires
      :self (partial require-by-id (:id fsm-initial))
-     :apply-effect (fn [fsm-struct state]
-                     (apply-behavior fsm-struct state))
-     :require-data (fn [{:keys [requires]} state]
-                     (reduce (fn [c r] (assoc c r ((r requires) state))) {} (keys requires)))
-     :update (fn [fsm-struct state]
-               (let [{:keys [fsm require-data self]} fsm-struct
-                     self-data (self state)
-                     required-data (require-data fsm-struct state)
-                     new-fsm (update-entity-behaviors fsm {:self self-data :required required-data})
-                     updated-struct (assoc fsm-struct :fsm new-fsm)
-                     {:keys [fsm state]} (apply-post-effect updated-struct state)]
-                 {:fsm (assoc updated-struct :fsm fsm)
-                  :state state}))}))
+     :apply-effect apply-effect-fn
+     :require-data require-data-fn
+     :update update-fn}))
 
 (defn register-behavior
   [entity fsm new-effects new-evaluations]
@@ -275,3 +288,6 @@
                (if (> done n)
                  {:fsm fsm :state state}
                  (recur fsm state (inc done)))))))
+
+(defn affect
+  [state affection & params])

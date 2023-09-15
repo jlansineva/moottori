@@ -1,5 +1,14 @@
 (ns pelinrakentaja-engine.dev.tila.clock)
 
+(def clock-evaluations {::start (fn [{:keys [self]}]
+                                  (true? (get-in self [:started?])))
+                        ::pause (fn [{:keys [self]}]
+                                  (true? (get-in self [:paused?])))
+                        ::unpause (fn [{:keys [self]}]
+                                    (true? (get-in self [:unpause?])))
+                        ::stop (fn [{:keys [self]}]
+                                 (true? (get-in self [:stop?])))})
+
 (defn update-elapsed-time
   [self-id required state]
   (update-in state [:entities :data self-id]
@@ -21,15 +30,6 @@
                  (assoc clock
                         :last-millis current-millis
                         :current-millis elapsed)))))
-
-(def clock-evaluations {::start (fn [{:keys [self]}]
-                                  (true? (get-in self [:started?])))
-                        ::pause (fn [{:keys [self]}]
-                                  (true? (get-in self [:paused?])))
-                        ::unpause (fn [{:keys [self]}]
-                                    (true? (get-in self [:unpause?])))
-                        ::stop (fn [{:keys [self]}]
-                                 (true? (get-in self [:stop?])))})
 
 (def clock-effects {::update-elapsed-time update-elapsed-time
                     ::update-last-time update-last-time})
