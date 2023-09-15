@@ -96,7 +96,14 @@
   {:pre [(or (vector? effect)
              (keyword? effect))]}
   (if (vector? effect)
-    (apply comp (mapv #(get @effects %) (rseq effect)))
+    (fn [self required state]
+      (let [comp-fn (apply comp
+                           (mapv (fn [effect-id]
+                                   (fn [state]
+                                     (let [effect (get @effects effect-id)]
+                                       (effect self required state))))
+                                 (rseq effect)))]
+        (comp-fn state)))
     (get @effects effect)))
 
 (defn apply-behavior
