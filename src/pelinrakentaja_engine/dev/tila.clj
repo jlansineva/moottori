@@ -1,48 +1,6 @@
 (ns pelinrakentaja-engine.dev.tila
   (:require [pelinrakentaja-engine.utils.log :as log]))
 
-(comment
-  {:fsm  {:require [[:type :guard] [:type :shopper]]
-          :id :player
-          :pre {:transitions [{:when [::dead ::initialized]
-                               :switch :dead}]}
-          :current {:state :waiting-for-init
-                    :effect ::no-op}
-          :last {:state nil}
-          :states {:dead {:effect ::dead
-                          :transitions []}
-                   :waiting-for-init {:effect ::no-op
-                                      :transitions [{:when [::instance-found]
-                                                     :switch :idle
-                                                     :post-effect ::initialize}]}
-                   :idle {:effect ::no-op
-                          :transitions [{:when [::low-health ::no-potions]
-                                         :switch :move-to-exit}
-                                        {:when [::low-health ::potions-available]
-                                         :switch :move-to-health}
-                                        {:when [::affordable-items]
-                                         :switch :move-to-item}]}
-                   :move-to-item {:effect ::move-to-closest-affordable-item
-                                  :transitions [{:when [::low-health ::potions-available]
-                                                 :switch :move-to-health}
-                                                {:when [::low-health ::no-potions]
-                                                 :switch :move-to-exit}
-                                                {:when [::on-item ::enough-money]
-                                                 :switch :pick-item}]}
-                   :move-to-exit {:effect ::move-to-exit
-                                  :transitions [{:when [::affordable-items]
-                                                 :switch :move-to-item}]}
-                   :move-to-health {:effect ::move-to-closest-potion
-                                    :transitions [{:when [::on-health]
-                                                   :switch :pick-item}]}
-                   :pick-item {:effect ::pick-item
-                               :transitions [{:when [::item-picked ::no-affordable-items]
-                                              :switch :move-to-exit}
-                                             {:when [::item-picked ::affordable-items]
-                                              :switch :idle}
-                                             {:when [::item-picked ::potions-available]
-                                              :switch :idle}]}}}})
-
 (def effects (atom {:no-op (fn [_self _required state] state)}))
 (def evaluations (atom {:true (constantly true)}))
 
@@ -152,6 +110,16 @@
 ;  (prn :req-id> require)
   (get-in state [:entities :data require]))
 
+(defn require-by-layer
+  [require state]
+  {:pre [(keyword? require)]}
+;  (prn :req-type> require)
+  (let [layer-ids (get-in state [:entities :layer->entities require])]
+     (reduce (fn [acc curr]
+               (assoc acc curr (get-in state [:entities :data curr])))
+            {}
+            layer-ids)))
+
 (defn require-by-type
   [require state]
   {:pre [(keyword? require)]}
@@ -215,6 +183,11 @@
 
                       (and (vector? require)
                            (= (first require)
+                              :layer))
+                      (assoc collected (second require) (partial require-by-layer (second require)))
+
+                      (and (vector? require)
+                           (= (first require)
                               :path)) ;; TODO: figure out pathing (maybe provide 3rd parameter for key)
                       (assoc collected (second require) (partial require-by-path (second require)))))
                   {}
@@ -227,52 +200,24 @@
      :require-data require-data-fn
      :update update-fn}))
 
+(defn create-affections [entity affections]
+  (assoc entity
+         :-affections affections
+         :affect (fn [state [affection & params]]
+                   {:pre [(keyword? affection)
+                          (some? (get-in state [:entities :data (:id entity) :-affections affection]))]}
+                   (let [{:keys [id]} entity
+                         {:keys [-affections]} (get-in state [:entities :data id])
+                         affect-fn (get -affections affection)]
+                     (affect-fn state (get-in state [:entities :data (:id entity)]) params)))))
+
 (defn register-behavior
   [entity fsm new-effects new-evaluations]
   (swap! effects merge new-effects)
   (swap! evaluations merge new-evaluations)
   (process-fsm (assoc fsm :id (:id entity))))
 
-(comment (register-behavior {} {:require [[:type :guard] [:type :shopper]]
-                                :id :player
-                                :pre {:transitions [{:when [:dead :initialized]
-                                                     :switch :dead}]}
-                                :current {:state :waiting-for-init
-                                          :effect :no-op}
-                                :last {:state nil}
-                                :states {:dead {:effect :dead
-                                                :transitions []}
-                                         :waiting-for-init {:effect :no-op
-                                                            :transitions [{:when [:found]
-                                                                           :switch :idle
-                                                                           :post-effect :initialize}]}
-                                         :idle {:effect :no-op
-                                                :transitions [{:when [:a]
-                                                               :switch :state-a}]}
-                                         :state-a {:effect :effect-a
-                                                   :transitions [{:when [:b]
-                                                                  :switch :state-b}]}
-                                         :state-b {:effect :effect-b
-                                                   :transitions [{:when [:c]
-                                                                  :switch :state-c}]}
-                                         :state-c {:effect :effect-c
-                                                   :transitions []}}}
-
-                            {:effect-a #(do (prn :effect-a) (assoc % :a :done))
-                             :effect-b #(do (prn :effect-b) (assoc % :b :done))
-                             :effect-c #(do (prn :effect-c) (assoc % :c :done))
-                             :no-op #(do (prn :no-op) %)
-                             :dead #(do (prn :dead) (assoc % :dead true))
-                             :initialize #(do (prn :initialize) (assoc % :initialized true))}
-
-                            {:a (fn [s] (prn :a s) true)
-                             :b (fn [s] (prn :b s) true)
-                             :c (fn [s] (prn :c s) true)
-                             :found (fn [s] (prn :found s) true)
-                             :dead (fn [s] (prn :dead s) true)
-                             :initialized (fn [s] (prn :initialized s) (some? (:initialized s)))})
-
-         {:behaviours {:clock {:fsm {}}}
+(comment {:behaviours {:clock {:fsm {}}}
           :entities
           {:data {:player {:x 1 :y 2 :fsm {}}
                   :enemy-1 {:x 4 :y 5}
@@ -302,7 +247,6 @@
              (let [{:keys [fsm state]} (update-and-apply fsm state)]
                (if (> done n)
                  {:fsm fsm :state state}
-                 (recur fsm state (inc done)))))))
+                 (recur fsm state (inc done))))))
 
-(defn affect
-  [state affection & params])
+         #_(affect state :player [::hurt 40]))
