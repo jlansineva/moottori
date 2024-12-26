@@ -15,7 +15,8 @@
             [pelinrakentaja-engine.core.events :as events]
             [pelinrakentaja-engine.utils.log :as log]
             [pelinrakentaja-engine.utils.keys :as keys]
-            [pelinrakentaja-engine.utils.nrepl :as nrepl]))
+            [pelinrakentaja-engine.utils.nrepl :as nrepl]
+            [pelinrakentaja-engine.core.state :as state]))
 
 (defn initialize-window
   [{:keys [repl? title]}]
@@ -45,6 +46,8 @@
   (events/update-queue)
   (log/print-logs)
   (Thread/sleep 16))
+
+(def entity-state state/entity-state)
 
 (def keymap keys/keymap)
 (def keyval keys/keyval)

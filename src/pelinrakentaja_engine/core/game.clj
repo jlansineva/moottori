@@ -10,6 +10,18 @@
            [com.badlogic.gdx.utils.viewport ExtendViewport]
            [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]))
 
+"What should happen is that currently the render queue is a collection of entity ids to be drawn.
+
+Renderable entities is a collection of entity data corresponding to ids with x and y and texture data.
+
+These are stored in state.
+
+There is a barrier between entities in the renderer and entities in the game.
+
+These should be the same.
+
+The render queue is just all entities."
+
 (gen-class
   :name pelinrakentaja-engine.core.game.Game
   :extends com.badlogic.gdx.ApplicationAdapter)

@@ -11,6 +11,8 @@
 
 (defonce engine-state (atom initial-state))
 
+(defonce entity-state (atom {}))
+
 (comment {:type :id
           :texture "some.png"}
 
