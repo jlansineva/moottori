@@ -43,9 +43,15 @@ The render queue is just all entities."
       (let [{:keys [id path type]} (first resource-load-queue)]
         (log/log :debug :resource id path)
         (events/direct-state-access [:resources/load-resource-file id path type])))
+    (graphics.camera/move-camera-to-position active-camera
+                                             (-> viewport
+                                                 .getWorldWidth
+                                                 (/ 2)
+                                                 (- 2))
+                                             0
+                                             0)
     #_(log/log :debug :events render-q)
     ;; TODO: camera should be its own entity that is controlled from outside
-    (graphics.camera/move-camera active-camera 0.01 0.005 0)
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
     (.update (:camera active-camera))
@@ -76,7 +82,13 @@ The render queue is just all entities."
         sprite-batch (SpriteBatch.)]
     (.setInputProcessor (. Gdx -input) (input/create-input-adapter))
     (.apply viewport)
-    (graphics.camera/legacy-init camera viewport)
+    (graphics.camera/move-camera-to-position camera
+                                             (-> viewport
+                                                 .getWorldWidth
+                                                 (/ 2)
+                                                 (- 2))
+                                             0
+                                             0)
     (swap! game-data assoc
            :cameras {:active-camera camera
                      :created-cameras [camera]}
