@@ -1,5 +1,6 @@
 (ns pelinrakentaja-engine.core.game
-  (:require [pelinrakentaja-engine.config :as config]
+  (:require [pelinrakentaja-engine.core.graphics.camera :as graphics.camera]
+            [pelinrakentaja-engine.config :as config]
             [pelinrakentaja-engine.core.state :as state]
             [pelinrakentaja-engine.core.input :as input]
             [pelinrakentaja-engine.core.events :as events]
@@ -34,7 +35,7 @@ The render queue is just all entities."
 
 (defn -render
   [^ApplicationAdapter this]
-  (let [{:keys [camera batch viewport]} @game-data
+  (let [{{:keys [active-camera]} :cameras :keys [batch viewport]} @game-data
         resource-load-queue (resource-queue-listener)
         render-q (render-queue)
         entities (renderable-entities)]
@@ -44,14 +45,11 @@ The render queue is just all entities."
         (events/direct-state-access [:resources/load-resource-file id path type])))
     #_(log/log :debug :events render-q)
     ;; TODO: camera should be its own entity that is controlled from outside
-    (set! (.-x (.-position camera)) (-> viewport
-                                        .getWorldWidth
-                                        (/ 2)
-                                        (- 2)))
+    (graphics.camera/move-camera active-camera 0.01 0.005 0)
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
-    (.update camera)
-    (.setProjectionMatrix batch (.-combined camera))
+    (.update (:camera active-camera))
+    (.setProjectionMatrix batch (.-combined (:camera active-camera)))
     (.begin batch)
     (doseq [entity-id render-q]
       (let [{{:keys [width height]} :texture ;; TODO: implement scale and rotation
@@ -73,14 +71,15 @@ The render queue is just all entities."
   (log/log :debug :engine/lifecycle "creating")
   (let [cam-w (config/get-config :cam-width) ;; y = 28, x = 92
         cam-h (config/get-config :cam-height)
-        camera (OrthographicCamera.)
-        viewport (ExtendViewport. cam-w cam-h camera)
+        camera (graphics.camera/create-camera :orthographic)
+        viewport (ExtendViewport. cam-w cam-h (:camera camera))
         sprite-batch (SpriteBatch.)]
     (.setInputProcessor (. Gdx -input) (input/create-input-adapter))
     (.apply viewport)
-    (.update camera)
+    (graphics.camera/legacy-init camera viewport)
     (swap! game-data assoc
-           :camera camera
+           :cameras {:active-camera camera
+                     :created-cameras [camera]}
            :viewport viewport
            :batch sprite-batch)
     (events/force [:engine/initialize])))

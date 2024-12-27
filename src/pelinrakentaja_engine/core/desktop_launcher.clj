@@ -1,5 +1,6 @@
 (ns pelinrakentaja-engine.core.desktop-launcher
   (:require [pelinrakentaja-engine.core.game :refer :all]
+            [pelinrakentaja-engine.core.debug-events :as debug-events]
             [pelinrakentaja-engine.core.core-events :as core-events]
             [pelinrakentaja-engine.core.core-listeners :as core-listeners]
             [pelinrakentaja-engine.core.events :as events]
@@ -30,12 +31,17 @@
   (events/register-handler :entities/remove-entities-with-ids core-events/remove-entities-with-ids)
   (events/register-handler :audio/play-music audio/play-music-with-id)
 
+  ;; DEBUG
+  (events/register-handler :debug/activate-debug-mode debug-events/set-debug-mode)
+  (events/register-handler :debug/deactivate-debug-mode debug-events/set-debug-mode)
+
   (events/register-listener :engine/status [:engine :status] core-listeners/engine-status)
   (events/register-listener :resources/resource-load-queue [:engine :graphics] core-listeners/resource-load-queue)
   (events/register-listener :input/pressed-keys [:input :keys] core-listeners/pressed-keys)
   (events/register-listener :engine/render-queue [:engine :graphics :render-queue] core-listeners/render-queue)
   (events/register-listener :engine/renderable-entities [:engine :entities] core-listeners/renderable-entities)
   (events/register-listener :resources/resource-loaded? [:resources] core-listeners/resource-loaded?)
+
   (let [configuration (Lwjgl3ApplicationConfiguration.)]
     (.setTitle configuration (or title "Game"))
     (.setResizable configuration false)
