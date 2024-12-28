@@ -5,6 +5,7 @@
             [pelinrakentaja-engine.core.input :as input]
             [pelinrakentaja-engine.core.events :as events]
             [pelinrakentaja-engine.core.graphics.textures :as textures]
+            [pelinrakentaja-engine.dev.debug-mode :as dev.debug-mode]
             [pelinrakentaja-engine.utils.log :as log])
   (:import [com.badlogic.gdx Gdx ApplicationAdapter]
            [com.badlogic.gdx.graphics GL20 OrthographicCamera]
@@ -43,13 +44,14 @@ The render queue is just all entities."
       (let [{:keys [id path type]} (first resource-load-queue)]
         (log/log :debug :resource id path)
         (events/direct-state-access [:resources/load-resource-file id path type])))
-    (graphics.camera/move-camera-to-position active-camera
+    #_(graphics.camera/move-camera-to-position active-camera
                                              (-> viewport
                                                  .getWorldWidth
                                                  (/ 2)
                                                  (- 2))
                                              0
                                              0)
+    (dev.debug-mode/debug-mode-update active-camera)
     #_(log/log :debug :events render-q)
     ;; TODO: camera should be its own entity that is controlled from outside
     (.glClearColor (Gdx/gl) 0.2 0.2 0 0)

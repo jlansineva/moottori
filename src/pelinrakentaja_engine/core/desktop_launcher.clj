@@ -32,8 +32,7 @@
   (events/register-handler :audio/play-music audio/play-music-with-id)
 
   ;; DEBUG
-  (events/register-handler :debug/activate-debug-mode debug-events/set-debug-mode)
-  (events/register-handler :debug/deactivate-debug-mode debug-events/set-debug-mode)
+  (events/register-handler :debug/set-debug-mode debug-events/set-debug-mode)
 
   (events/register-listener :engine/status [:engine :status] core-listeners/engine-status)
   (events/register-listener :resources/resource-load-queue [:engine :graphics] core-listeners/resource-load-queue)

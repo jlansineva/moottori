@@ -7,4 +7,11 @@
              :up Input$Keys/UP
              :down Input$Keys/DOWN})
 
+(def debug-keymap {:debug-up Input$Keys/I
+                   :debug-left Input$Keys/J
+                   :debug-down Input$Keys/K
+                   :debug-right Input$Keys/L})
+
 (def keyval (set/map-invert keymap))
+
+(def debug-keyval (set/map-invert debug-keymap))
