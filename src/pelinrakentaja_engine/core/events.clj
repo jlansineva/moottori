@@ -37,11 +37,12 @@
   {:input {:keys {:a true}}})
 
 (defn add-listener
-  [queue-state id path listener-fn]
+  [queue-state id path listener-fn listener-type]
   (-> queue-state
       (update-in [:listeners :paths] conj [path id])
       (assoc-in [:listeners :fns id] {:fn listener-fn
-                                      :path path}))) ;; TODO: check if path exists
+                                      :path path
+                                      :type listener-type}))) ;; TODO: check if path exists
 
 (defn remove-listener
   [queue-state id]
@@ -55,9 +56,19 @@
   "Registers a listener. A listener has an id that it is referred to by.
   A listener is also given a path that it observes. Should the path be affected,
   a listener will return a new value. Otherwise it will return nil."
+  ([id path listener-fn]
+   (register-listener id path listener-fn :engine))
+  ([id path listener-fn listener-type]
+   (log/log :debug :listener/register id)
+   (swap! event-queue add-listener id path listener-fn listener-type)))
+
+(defn register-engine-listener
   [id path listener-fn]
-  (log/log :debug :listener/register id)
-  (swap! event-queue add-listener id path listener-fn))
+  (register-listener id path listener-fn :engine))
+
+(defn register-entity-listener
+  [id path listener-fn]
+  (register-listener id path listener-fn :entity))
 
 (defn clear-listener
   [id]
@@ -71,26 +82,44 @@
     (if-let [l (get-in @event-queue [:listeners :fns listener-id])]
       (let [path (get l :path)
             listener-fn (get l :fn)
-            returnable (apply listener-fn (get-in @state/engine-state path) params)]
+            listener-type (get l :type)
+            state-dereffed (case listener-type
+                             :engine @state/engine-state
+                             :entity @state/entity-state)
+            returnable (apply listener-fn (get-in state-dereffed path) params)]
         #_(when (get-in @event-queue [:affected listener-id]))
         returnable)
       (when (get-in @state/engine-state [:engine :status :initialized?])
         (throw (Exception. (str "whoops no listener " listener-id (pr-str (:listeners @event-queue))))))))) ;; TODO error logging
 
 (defn create-handler
-  [handler-fn]
-  (fn -handler
-    ([] (swap! state/engine-state handler-fn))
-    ([p1] (swap! state/engine-state handler-fn p1))
-    ([p1 p2] (swap! state/engine-state handler-fn p1 p2))
-    ([p1 p2 p3] (swap! state/engine-state handler-fn p1 p2 p3))
-    ([p1 p2 p3 & params] (apply swap! state/engine-state handler-fn p1 p2 p3 params))))
+  [handler-fn handler-type]
+
+  (let [state-atom (case handler-type
+                     :engine state/engine-state
+                     :entity state/entity-state)]
+   (fn -handler
+    ([] (swap! state-atom handler-fn))
+    ([p1] (swap! state-atom handler-fn p1))
+    ([p1 p2] (swap! state-atom handler-fn p1 p2))
+    ([p1 p2 p3] (swap! state-atom handler-fn p1 p2 p3))
+    ([p1 p2 p3 & params] (apply swap! state-atom handler-fn p1 p2 p3 params)))))
 
 (defn register-handler
-  [event-id handler-fn]
+  ([event-id handler-fn]
+   (register-handler event-id handler-fn :engine))
+  ([event-id handler-fn handler-type]
   (log/log :debug :register-handler event-id) ;; TODO use logging
-  (let [state-injected-handler (create-handler handler-fn)]
-    (swap! event-queue assoc-in [:handlers event-id] state-injected-handler)))
+  (let [state-injected-handler (create-handler handler-fn handler-type)]
+    (swap! event-queue assoc-in [:handlers event-id] state-injected-handler))))
+
+(defn register-engine-handler
+  [event-id handler-fn]
+  (register-handler event-id handler-fn :engine))
+
+(defn register-entity-handler
+  [event-id handler-fn]
+  (register-handler event-id handler-fn :entity))
 
 (defn process-next-event
   [event-queue]
