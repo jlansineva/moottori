@@ -19,7 +19,11 @@
             [pelinrakentaja-engine.core.state :as state]))
 
 (defn initialize-window
-  [{:keys [repl? title]}]
+  [{:keys [repl? title entity-state]}]
+  {:pre [(or (nil? entity-state)
+             (instance? clojure.lang.Atom entity-state))]}
+  (when entity-state
+    (alter-var-root #'state/entity-state (constantly entity-state)))
   (when repl?
     (nrepl/launch-nrepl))
   (launcher/setup-window {:title title}))
