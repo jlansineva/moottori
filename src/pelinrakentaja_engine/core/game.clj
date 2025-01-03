@@ -34,12 +34,44 @@ The render queue is just all entities."
 (def render-queue (events/listener :engine/render-queue))
 (def renderable-entities (events/listener :engine/renderable-entities))
 
+(defn batch-draw-sequence 
+  [entity-id-sequence] 
+  (let [{:keys [batch]} @game-data
+        entities (renderable-entities)]
+    (.begin batch)
+    (doseq [entity-id entity-id-sequence]
+      (let [{{:keys [width height]} :texture ;; TODO: implement scale and rotation
+             {scale-x :x scale-y :y} :scale
+             position-x :x
+             position-y :y :as entity
+             :keys [rotation]} (get entities entity-id)
+             scale-x (or scale-x 1.0)
+             scale-y (or scale-y 1.0)
+             rotation (or rotation 0)]
+        (when-let [textureregion (get-in @state/engine-state [:resources :texture (:type entity)])]
+          #_(.draw batch ;; (Texture texture, float x, float y, 
+        ;; float originX, float originY, 
+        ;; float width, float height, 
+        ;; float scaleX, float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX, boolean flipY
+                   (.getTexture textureregion)
+                   ent-x (- (config/get-config :world-height) ent-y) ;; <todo fix - this needs to be toggled somehow
+                   width (- height)
+                   0 0
+                   width height)
+          (.draw batch textureregion
+                 position-x (- (config/get-config :world-height) position-y)
+                 0 0
+                 width height
+                 scale-x scale-y
+                 rotation))))
+    (.end batch)))
+
 (defn -render
   [^ApplicationAdapter this]
   (let [{{:keys [active-camera]} :cameras :keys [batch viewport]} @game-data
         resource-load-queue (resource-queue-listener)
         render-q (render-queue)
-        entities (renderable-entities)]
+        ]
     (when resource-load-queue
       (let [{:keys [id path type]} (first resource-load-queue)]
         (log/log :debug :resource id path)
@@ -58,21 +90,7 @@ The render queue is just all entities."
     (.glClear (Gdx/gl) GL20/GL_COLOR_BUFFER_BIT)
     (.update (:camera active-camera))
     (.setProjectionMatrix batch (.-combined (:camera active-camera)))
-    (.begin batch)
-    (doseq [entity-id render-q]
-      (let [{{:keys [width height]} :texture ;; TODO: implement scale and rotation
-             {_scale-x :x _scale-y :y} :scale
-             ent-x :x
-             ent-y :y :as entity
-             :keys [_rotation]} (get entities entity-id)]
-        (when-let [textureregion (get-in @state/engine-state [:resources :texture (:type entity)])]
-          (.draw batch
-                 (.getTexture textureregion)
-                 ent-x (- (config/get-config :world-height) ent-y) ;; <todo fix - this needs to be toggled somehow
-                 width (- height)
-                 0 0
-                 width height))))
-    (.end batch)))
+    (batch-draw-sequence render-q)))
 
 (defn -create
   [^ApplicationAdapter this]

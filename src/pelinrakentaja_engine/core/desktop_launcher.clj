@@ -15,6 +15,11 @@
   [{:keys [title width height]}]
   (events/register-handler :input/key-down core-events/key-down)
   (events/register-handler :input/key-up core-events/key-up)
+
+  (events/register-handler :input/mouse-down core-events/mouse-down)
+  (events/register-handler :input/mouse-up core-events/mouse-up)
+  (events/register-handler :input/mouse-moved core-events/mouse-moved) 
+
   (events/register-handler :resources/load-texture core-events/load-texture) ;; DEPRECATED
   (events/register-handler :resources/load-resource core-events/load-resource)
   (events/register-handler :entities/add-entities core-events/add-entities)
@@ -40,6 +45,9 @@
   (events/register-listener :engine/render-queue [:engine :graphics :render-queue] core-listeners/render-queue)
   (events/register-listener :engine/renderable-entities [:engine :entities] core-listeners/renderable-entities)
   (events/register-listener :resources/resource-loaded? [:resources] core-listeners/resource-loaded?)
+
+  (events/register-listener :input/mouse-position [:input :mouse :position] core-listeners/mouse-position)
+  (events/register-listener :input/mouse-pressed [:input :mouse] core-listeners/mouse-pressed)
 
   (let [configuration (Lwjgl3ApplicationConfiguration.)]
     (.setTitle configuration (or title "Game"))

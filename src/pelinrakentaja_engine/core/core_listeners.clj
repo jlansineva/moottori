@@ -9,6 +9,14 @@
   [substate]
   substate)
 
+(defn mouse-position
+  [substate]
+  substate)
+
+(defn mouse-pressed
+  [substate]
+  substate)
+
 (defn entity-with-id
   [entity-id]
   )

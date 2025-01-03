@@ -1,6 +1,6 @@
 (ns pelinrakentaja-engine.utils.keys
   (:require [clojure.set :as set])
-  (:import [com.badlogic.gdx Input$Keys]))
+  (:import [com.badlogic.gdx Input$Keys Input$Buttons]))
 
 (def keymap {:left Input$Keys/LEFT
              :right Input$Keys/RIGHT
@@ -15,3 +15,13 @@
 (def keyval (set/map-invert keymap))
 
 (def debug-keyval (set/map-invert debug-keymap))
+
+(def map-keyword->mouse
+  {:mouse-left Input$Buttons/LEFT
+   :mouse-right Input$Buttons/RIGHT 
+   :mouse-middle Input$Buttons/MIDDLE 
+   :mouse-back Input$Buttons/BACK 
+   :mouse-forward Input$Buttons/FORWARD})
+
+(def map-mouse->keyword
+  (set/map-invert map-keyword->mouse))

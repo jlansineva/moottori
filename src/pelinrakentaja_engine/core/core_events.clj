@@ -124,3 +124,20 @@
 (defn key-up
   [state key-code]
   (assoc-in state [:input :keys key-code :pressed?] false))
+
+(defn mouse-down
+  [state button x y]
+  (update-in state [:input :mouse] 
+             assoc button {:pressed? true}
+             :position {:x x :y y}))
+
+(defn mouse-up
+  [state button x y]
+  (update-in state [:input :mouse] 
+             assoc button {:pressed? false}
+             :position {:x x :y y}))
+
+(defn mouse-moved 
+  [state x y]
+  (update-in state [:input :mouse]
+             assoc :position {:x x :y y}))
