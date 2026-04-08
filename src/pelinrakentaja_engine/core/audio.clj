@@ -1,19 +1,20 @@
 (ns pelinrakentaja-engine.core.audio
   (:require [pelinrakentaja-engine.core.events :as events]
-             [pelinrakentaja-engine.utils.log :as log])
-  (:import [com.badlogic.gdx Gdx]))
+            [pelinrakentaja-engine.utils.log :as log])
+  ;(:import [com.badlogic.gdx Gdx])
+  )
 
 (def resource-loaded? (events/listener :resources/resource-loaded?))
 
 (defn load-sfx-from-resources
   [id path]
-  (when-not (resource-loaded? :sfx id)
+  #_(when-not (resource-loaded? :sfx id)
     (let [audio (. Gdx -audio)]
       (.newSound audio (.internal (. Gdx -files) path)))))
 
 (defn load-music-from-resources
   [id path]
-  (when-not (resource-loaded? :music id)
+  #_(when-not (resource-loaded? :music id)
     (let [audio (. Gdx -audio)]
       (.newMusic audio (.internal (. Gdx -files) path)))))
 

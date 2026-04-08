@@ -1,7 +1,7 @@
 (ns pelinrakentaja-engine.core.graphics.sprites
-  (:import [com.badlogic.gdx Gdx]
+#_  (:import [com.badlogic.gdx Gdx]
            [com.badlogic.gdx.graphics.g2d Sprite]))
 
 (defn create-sprite
   [texture]
-  (Sprite. texture))
+  #_(Sprite. texture))

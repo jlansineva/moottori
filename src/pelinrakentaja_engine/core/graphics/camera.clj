@@ -1,17 +1,15 @@
 (ns pelinrakentaja-engine.core.graphics.camera
-  (:require [pelinrakentaja-engine.utils.interop :as utils.interop])
-  (:import [com.badlogic.gdx Gdx ApplicationAdapter]
-           [com.badlogic.gdx.graphics GL20 OrthographicCamera PerspectiveCamera]
-           [com.badlogic.gdx.utils.viewport ExtendViewport]
-           [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]))
+  (:require [pelinrakentaja-engine.utils.interop :as utils.interop]))
 
 (defn create-camera
   [camera-mode]
   {:pre [(keyword? camera-mode)
          (some? (get #{:orthographic :perspective} camera-mode))]}
-  (let [camera-instance (if (= camera-mode :orthographic)
-                          (OrthographicCamera.)
-                          (PerspectiveCamera.))]
+  ;; TODO fixme
+  (let [camera-instance {}
+        #_(if (= camera-mode :orthographic)
+          (OrthographicCamera.)
+          (PerspectiveCamera.))]
     {:camera camera-instance
      :orthographic? (= :orthographic camera-mode)
      :perspective? (= :orthographic camera-mode)

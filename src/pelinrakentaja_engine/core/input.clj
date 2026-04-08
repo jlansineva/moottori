@@ -1,11 +1,11 @@
 (ns pelinrakentaja-engine.core.input
   (:require [pelinrakentaja-engine.core.events :as events]
             [pelinrakentaja-engine.utils.log :as log])
-  (:import [com.badlogic.gdx InputAdapter]))
+ #_ (:import [com.badlogic.gdx InputAdapter]))
 
 (defn create-input-adapter
   []
-  (proxy [InputAdapter] []
+  #_(proxy [InputAdapter] []
     (keyDown [key-code]
       (log/log :debug :input-adapter/key-down key-code)
       (events/dispatch [:input/key-down key-code])

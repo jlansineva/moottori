@@ -1,7 +1,7 @@
 (ns pelinrakentaja-engine.core.graphics.textures
   (:require [pelinrakentaja-engine.core.events :as events]
             [pelinrakentaja-engine.utils.log :as log])
-  (:import [com.badlogic.gdx Gdx]
+  #_(:import [com.badlogic.gdx Gdx]
            [com.badlogic.gdx.graphics Texture Texture$TextureWrap]
            [com.badlogic.gdx.graphics.g2d TextureRegion]))
 
@@ -11,7 +11,7 @@
   [id path]
   (log/log :debug :load-texture-from-resource :id id :path path)
   (when-not (resource-loaded? :texture id)
-    (let [texture (Texture. (.internal (. Gdx -files) path))
+    #_(let [texture (Texture. (.internal (. Gdx -files) path))
           _ (.setWrap texture Texture$TextureWrap/Repeat Texture$TextureWrap/Repeat)]
       (log/log :debug :texture :h (.getHeight texture) :w (.getWidth texture))
       (TextureRegion. texture))))

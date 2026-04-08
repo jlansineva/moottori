@@ -7,7 +7,7 @@
             [pelinrakentaja-engine.core.graphics.textures :as textures]
             [pelinrakentaja-engine.dev.debug-mode :as dev.debug-mode]
             [pelinrakentaja-engine.utils.log :as log])
-  (:import [com.badlogic.gdx Gdx ApplicationAdapter]
+  #_(:import [com.badlogic.gdx Gdx ApplicationAdapter]
            [com.badlogic.gdx.graphics GL20 OrthographicCamera]
            [com.badlogic.gdx.utils.viewport ExtendViewport]
            [com.badlogic.gdx.graphics.g2d BitmapFont SpriteBatch]))
@@ -24,7 +24,7 @@ These should be the same.
 
 The render queue is just all entities."
 
-(gen-class
+#_(gen-class
   :name pelinrakentaja-engine.core.game.Game
   :extends com.badlogic.gdx.ApplicationAdapter)
 
@@ -66,7 +66,7 @@ The render queue is just all entities."
                  rotation))))
     (.end batch)))
 
-(defn -render
+#_(defn -render
   [^ApplicationAdapter this]
   (let [{{:keys [active-camera]} :cameras :keys [batch viewport]} @game-data
         resource-load-queue (resource-queue-listener)
@@ -92,7 +92,7 @@ The render queue is just all entities."
     (.setProjectionMatrix batch (.-combined (:camera active-camera)))
     (batch-draw-sequence render-q)))
 
-(defn -create
+#_(defn -create
   [^ApplicationAdapter this]
   (log/log :debug :engine/lifecycle "creating")
   (let [cam-w (config/get-config :cam-width) ;; y = 28, x = 92
@@ -116,15 +116,15 @@ The render queue is just all entities."
            :batch sprite-batch)
     (events/force [:engine/initialize])))
 
-(defn -pause
+#_(defn -pause
   [^ApplicationAdapter this]
   (log/log :debug :engine/lifecycle "paused"))
 
-(defn -dispose
+#_(defn -dispose
   [^ApplicationAdapter this]
   (events/dispatch [:engine/cleanup])
   (log/log :debug :engine/lifecycle "disposed"))
 
-(defn -resize
+#_(defn -resize
   [^ApplicationAdapter this width height]
   (.update (:viewport @game-data) width height))
