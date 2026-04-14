@@ -7,7 +7,7 @@
      ;       [pelinrakentaja-engine.config :as config]
      ;       [pelinrakentaja-engine.core.audio :as audio]
             [pelinrakentaja-engine.graphics.window :as window])
-  (:gen-class))
+  )
 
 (defn setup-window
   [{:keys [title width height]}]

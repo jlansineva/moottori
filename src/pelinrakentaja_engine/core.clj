@@ -16,7 +16,10 @@
             [pelinrakentaja-engine.utils.log :as log]
         ;    [pelinrakentaja-engine.utils.keys :as keys]
             [pelinrakentaja-engine.utils.nrepl :as nrepl]
-            [pelinrakentaja-engine.core.state :as state]))
+            [pelinrakentaja-engine.core.state :as state]
+            [pelinrakentaja-engine.graphics.window :as window]
+            [pelinrakentaja-engine.graphics.renderer :as renderer])
+  (:gen-class))
 
 (defn initialize-window
   [{:keys [repl? title entity-state]}]
@@ -35,19 +38,29 @@
                    (System/exit 0))]
      (.start (Thread. ~'loop-fn))))
 
+(defn run
+  []
+  (window/create-window)
+  (renderer/init-renderer)
+  (while (not (window/should-window-close?))
+    (renderer/render)
+    (window/poll-events))
+
+  (window/terminate-window))
+
 ;; needs to register entities
 ;; needs to update entities
 
-;(def listen events/listener)
-;(def dispatch events/dispatch)
+                                        ;(def listen events/listener)
+                                        ;(def dispatch events/dispatch)
 
-;(def register-listener events/register-listener)
-;(def clear-listener events/clear-listener)
+                                        ;(def register-listener events/register-listener)
+                                        ;(def clear-listener events/clear-listener)
 
 (defn update!
   "Calling update somewhere in your logic updates the engine event queue and state. This is required."
   []
- ; (events/update-queue)
+                                        ; (events/update-queue)
   (log/print-logs)
   (Thread/sleep 16))
 

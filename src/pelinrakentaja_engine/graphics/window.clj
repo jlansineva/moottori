@@ -1,8 +1,14 @@
 (ns pelinrakentaja-engine.graphics.window
   (:require [pelinrakentaja-engine.config :as config])
-  (:import [org.lwjgl.glfw GLFW]))
+  (:import [org.lwjgl.glfw GLFW GLFWKeyCallback]))
 
 (def window (atom nil))
+
+(def key-callback (proxy [GLFWKeyCallback] []
+                             (invoke [window key scancode action mods]
+                               (println key)
+                               (when (= key GLFW/GLFW_KEY_ESCAPE)
+                                 (GLFW/glfwSetWindowShouldClose @window true)))))
 
 (defn create-window
   []
@@ -16,7 +22,8 @@
                                         "Hello"
                                         0 0))
 
-
+  (GLFW/glfwSetKeyCallback @window
+                           key-callback)
 
   (GLFW/glfwMakeContextCurrent @window)
   (GLFW/glfwSwapInterval 1)
@@ -27,3 +34,15 @@
   (when @window
     (GLFW/glfwDestroyWindow @window))
   (GLFW/glfwTerminate))
+
+(defn swap-buffers
+  []
+  (GLFW/glfwSwapBuffers @window))
+
+(defn should-window-close?
+  []
+  (GLFW/glfwWindowShouldClose @window))
+
+(defn poll-events
+  []
+  (GLFW/glfwPollEvents))

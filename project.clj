@@ -26,10 +26,12 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies ~dependencies
   :source-paths ["src" "src-common"]
-  :aot [pelinrakentaja-engine.core.desktop-launcher pelinrakentaja-engine.core.input]
-  :main pelinrakentaja-engine.core.desktop-launcher
+;  :aot [pelinrakentaja-engine.core.desktop-launcher pelinrakentaja-engine.core.input]
+  :jvm-opts ["--enable-native-access=ALL-UNNAMED"]
+  :main pelinrakentaja-engine.core
   :target-path "target/%s"
   :profiles {:dev {:aot :all}
              :uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"
-                                  "-XstartOnFirstThread"]}})
+                                  "-XstartOnFirstThread"
+                                  ]}})
