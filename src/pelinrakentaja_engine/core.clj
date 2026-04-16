@@ -21,6 +21,9 @@
             [pelinrakentaja-engine.graphics.renderer :as renderer])
   (:gen-class))
 
+;; TODO:
+;; - add a logging macro, which takes a body in a do and includes log based on a log level!
+
 (defn initialize-window
   [{:keys [repl? title entity-state]}]
   {:pre [(or (nil? entity-state)

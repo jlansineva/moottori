@@ -1,5 +1,7 @@
 (ns pelinrakentaja-engine.utils.log)
 
+(def logging (atom {:log-level :none}))
+
 (def enabled-logs #{:all
                     :input-adapter/key-down
                     :input-adapter/key-up
@@ -11,6 +13,9 @@
 (def ignore-log-from #{:all :event/dispatch :game/update-items :add-entity})
 
 (def log-queue (atom []))
+
+(defn set-log-level! [] ;; TODO
+  )
 
 (defn print-logs
   []
