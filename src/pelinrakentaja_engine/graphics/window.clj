@@ -35,8 +35,8 @@
   (GLFW/glfwWindowHint GLFW/GLFW_OPENGL_FORWARD_COMPAT GLFW/GLFW_TRUE)
 
   (println "creating window")
-  (reset! window (GLFW/glfwCreateWindow (config/get-config :window-default-x)
-                                        (config/get-config :window-default-y)
+  (reset! window (GLFW/glfwCreateWindow (config/get-config :window-width)
+                                        (config/get-config :window-height)
                                         "Hello"
                                         0 0))
 

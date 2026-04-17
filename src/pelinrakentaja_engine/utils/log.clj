@@ -14,7 +14,8 @@
 
 (def log-queue (atom []))
 
-(defn set-log-level! [] ;; TODO
+(defn set-log-level!
+  [log-level] ;; TODO
   )
 
 (defn print-logs
@@ -35,3 +36,8 @@
          (or (log-level enabled-log-levels)
              (:all enabled-log-levels)))
     (swap! log-queue conj (apply str logger params))))
+
+(defmacro log!
+  []
+  ;; TODO implement
+  )
