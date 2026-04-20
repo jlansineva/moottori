@@ -1,21 +1,20 @@
-(ns pelinrakentaja-engine.utils.log)
+(ns pelinrakentaja-engine.utils.log
+  (:require [clojure.string :as str]))
 
-(def logging (atom {:log-level :none}))
+(def logging (atom {:log-level :info}))
 
-(def enabled-logs #{:all
-                    :input-adapter/key-down
-                    :input-adapter/key-up
-                    :event-handlers/key-down
-                    :event-handlers/key-up
-                    :engine/lifecycle})
+(def enabled-logs #{:all})
 (def enabled-log-levels #{:all :important :debug :info})
 
-(def ignore-log-from #{:all :event/dispatch :game/update-items :add-entity})
+(def ignore-log-from #{:event/dispatch :game/update-items :add-entity})
 
 (def log-queue (atom []))
 
 (defn set-log-level!
   [log-level] ;; TODO
+  (if (some? (get enabled-log-levels log-level))
+    (swap! logging assoc :log-level log-level)
+    (println "error"))
   )
 
 (defn print-logs
@@ -23,7 +22,9 @@
   (when-not (empty? @log-queue)
     (swap! log-queue
            #(do
-              (mapv prn %)
+              (doseq [l %]
+                ;; TODO save log file
+                (println l))
               []))))
 
 (defn log
@@ -35,9 +36,4 @@
              (:all enabled-logs))
          (or (log-level enabled-log-levels)
              (:all enabled-log-levels)))
-    (swap! log-queue conj (apply str logger params))))
-
-(defmacro log!
-  []
-  ;; TODO implement
-  )
+    (swap! log-queue conj (str logger ": " (str/join " : " params)))))

@@ -43,13 +43,19 @@
 
 (defn run
   []
+  (log/log :info :engine/run "Creating GLFW window")
   (window/create-window)
+  (log/log :info :engine/run "Initializing GL renderer")
   (renderer/init-renderer)
   (while (not (window/should-window-close?))
     (renderer/render)
-    (window/poll-events))
+    (window/poll-events)
+    (log/print-logs))
 
-  (window/terminate-window))
+  (log/log :info :engine/run "Terminating window")
+  (window/terminate-window)
+
+  (log/print-logs))
 
 ;; needs to register entities
 ;; needs to update entities
