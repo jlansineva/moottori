@@ -1,2 +1,4 @@
 {:window-default-x 1024
- :window-default-y 768}
+ :window-default-y 768
+ :glfw-context-major-version 3
+ :glfw-context-minor-version 2}
