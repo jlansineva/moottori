@@ -38,10 +38,10 @@
        "    fragColor = vec4(vertexColor, 1.0);\n"
        "}\n"))
 
-(def sprite-quad-vertices (float-array [0.0 0.0 0.0 1.0 0.0 0.0
-                                        0.0 1.0 0.0 0.0 1.0 0.0
+(def sprite-quad-vertices (float-array [0.0 1.0 0.0 1.0 0.0 0.0
+                                        0.0 0.0 0.0 0.0 1.0 0.0
                                         1.0 1.0 0.0 0.0 0.0 1.0
-                                        ]))
+                                        1.0 0.0 0.0 1.0 1.0 0.0]))
 
 (defn initialize-vbo
   []
@@ -115,4 +115,5 @@
     (GL32/glUseProgram shader-program-id)
     (GL32/glBindVertexArray vertex-array-object)
     (GL32/glBindBuffer GL32/GL_ARRAY_BUFFER vertex-buffer-object)
-    (GL32/glDrawArrays GL32/GL_TRIANGLES 0 3)))
+    ;; TODO: allow for creating large arrays
+    (GL32/glDrawArrays GL32/GL_TRIANGLE_STRIP 0 4)))
