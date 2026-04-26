@@ -1,33 +1,21 @@
 # pelinrakentaja-engine
 
 Pelinrakentaja is a collection of tools aimed for easy game development on 
-Clojure. Moottori is a LibGDX wrapper.
+Clojure, focusing on live development in the REPL. Moottori is a game framework
+built on top of LWJGL3 for all engine type things. It is under constant, albeit
+slow development, as it is a fun little thing I work on when time allows.
 
-## Installation
+It is AI free, human-written library by design, and will stay that way. It's
+a thing to get your hands dirty in some real programming, without prompts.
 
-Download from http://example.com/FIXME.
+Currently, the usage is fairly limited, as Moottori shifts away from LibGDX
+to a LWJGL3 implementation. At the moment the OpenGL implementation is being
+written and it can at the moment display a quad. So there's that.
 
 ## Usage
 
-FIXME: explanation
-
-    $ java -jar pelinrakentaja-engine-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+You can download it and use it via the checkouts function in leiningen for now, 
+if you so wish. 
 
 ## License
 
