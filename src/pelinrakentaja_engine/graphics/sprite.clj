@@ -1,19 +1,27 @@
 (ns pelinrakentaja-engine.graphics.sprite
   (:require [pelinrakentaja-engine.utils.log :as log])
   (:import [org.lwjgl.opengl GL GL32]
-           [org.lwjgl.system MemoryStack]))
+           [org.lwjgl.system MemoryStack]
+           [org.joml Matrix4f]))
 
 (def data (atom {:vertex-buffer-object nil
                  :vertex-array-object nil
                  :fragment-shader-id nil
                  :vertex-shader-id nil
-                 :shader-program-id nil}))
+                 :shader-program-id nil
+                 :model-uniform-location nil
+                 :view-uniform-location nil
+                 :projection-uniform-location nil}))
+
+(def model-matrix (.translate (Matrix4f.) 0.5 0.5 0))
+(def view-matrix (Matrix4f.))
 
 (def vertex-shader
   (str "#version 150 core\n"
        "in vec3 position;\n"
        "\n"
        "in vec3 color;\n"
+       "uniform mat4 model;\n"
        "\n"
        "out vec3 vertexColor;\n"
        "\n"
@@ -24,7 +32,7 @@
        "    mvp[1] = vec4(0.0, 1.0, 0.0, 0.0);\n"
        "    mvp[2] = vec4(0.0, 0.0, 1.0, 0.0);\n"
        "    mvp[3] = vec4(0.0, 0.0, 0.0, 1.0);\n"
-       "    gl_Position = mvp * vec4(position, 1.0);\n"
+       "    gl_Position = model * mvp * vec4(position, 1.0);\n"
        "}\n"))
 
 (def fragment-shader
@@ -86,11 +94,16 @@
     (GL32/glBindFragDataLocation shader-program 0 "fragColor")
     (GL32/glLinkProgram shader-program)
 
-    (swap! data assoc :fragment-shader-id fragment-shader-id
+
+
+    (swap! data assoc
+           :fragment-shader-id fragment-shader-id
            :vertex-shader-id vertex-shader-id
            :shader-program-id shader-program)
 
-    (let [float-size 4
+    (let [model-location (GL32/glGetUniformLocation shader-program "model")
+          _ (swap! data assoc :model-uniform-location model-location)
+          float-size 4
 
           pos-attrib (GL32/glGetAttribLocation shader-program "position")
           _ (GL32/glEnableVertexAttribArray pos-attrib)
@@ -113,6 +126,11 @@
                 vertex-array-object
                 vertex-buffer-object]} @data]
     (GL32/glUseProgram shader-program-id)
+
+    (let [stack (MemoryStack/stackPush)]
+      (GL32/glUniformMatrix4fv (:model-uniform-location @data) false (.get model-matrix (.mallocFloat stack 16)))
+      (MemoryStack/stackPop))
+
     (GL32/glBindVertexArray vertex-array-object)
     (GL32/glBindBuffer GL32/GL_ARRAY_BUFFER vertex-buffer-object)
     ;; TODO: allow for creating large arrays
