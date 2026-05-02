@@ -16,7 +16,8 @@
 
 (def dependencies
   (into '[[org.clojure/clojure "1.12.4"]
-          [nrepl/nrepl "1.6.0"]]
+          [nrepl/nrepl "1.6.0"]
+          [org.joml/joml "1.10.8"]]
         (lwjgl-modules-with-natives)))
 
 (defproject conspiravision/pelinrakentaja-engine "0.1.0-SNAPSHOT"
