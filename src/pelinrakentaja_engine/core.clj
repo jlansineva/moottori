@@ -17,8 +17,7 @@
         ;    [pelinrakentaja-engine.utils.keys :as keys]
             [pelinrakentaja-engine.utils.nrepl :as nrepl]
             [pelinrakentaja-engine.core.state :as state]
-            [pelinrakentaja-engine.graphics.window :as window]
-            [pelinrakentaja-engine.graphics.renderer :as renderer])
+            )
   (:gen-class))
 
 ;; TODO:
@@ -40,22 +39,6 @@
                    (do ~@body)
                    (System/exit 0))]
      (.start (Thread. ~'loop-fn))))
-
-(defn run
-  []
-  (log/log :info :engine/run "Creating GLFW window")
-  (window/create-window)
-  (log/log :info :engine/run "Initializing GL renderer")
-  (renderer/init-renderer)
-  (while (not (window/should-window-close?))
-    (renderer/render)
-    (window/poll-events)
-    (log/print-logs))
-
-  (log/log :info :engine/run "Terminating window")
-  (window/terminate-window)
-
-  (log/print-logs))
 
 ;; needs to register entities
 ;; needs to update entities

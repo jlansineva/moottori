@@ -1,5 +1,6 @@
 (ns pelinrakentaja-engine.graphics.window
   (:require [pelinrakentaja-engine.config :as config]
+            [pelinrakentaja-engine.input.handler :as handler]
             [pelinrakentaja-engine.utils.log :as log])
   (:import [org.lwjgl.glfw GLFW GLFWKeyCallback]))
 
@@ -8,8 +9,7 @@
 ;; TODO: move to its own namespace and setup some sort of input management
 (def key-callback (proxy [GLFWKeyCallback] []
                     (invoke [window key scancode action mods]
-                      (when (= key GLFW/GLFW_KEY_ESCAPE)
-                        (GLFW/glfwSetWindowShouldClose window true)))))
+                      (handler/invoke-handler key))))
 
 (defn create-window
   []
@@ -52,6 +52,11 @@
 
   (when (nil? @window)
     (throw (Exception. "WIndow is nil")))
+
+  (handler/setup-handler GLFW/GLFW_KEY_ESCAPE
+                         (fn [{:keys [window]}]
+                           (GLFW/glfwSetWindowShouldClose window true))
+                         :window @window)
 
   (GLFW/glfwSetKeyCallback @window
                            key-callback)

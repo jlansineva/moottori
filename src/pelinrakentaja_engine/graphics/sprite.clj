@@ -1,5 +1,6 @@
 (ns pelinrakentaja-engine.graphics.sprite
-  (:require [pelinrakentaja-engine.utils.log :as log])
+  (:require [pelinrakentaja-engine.utils.log :as log]
+            [pelinrakentaja-engine.graphics.camera :as camera])
   (:import [org.lwjgl.opengl GL GL32]
            [org.lwjgl.system MemoryStack]
            [org.joml Matrix4f]))
@@ -13,8 +14,7 @@
                  :view-uniform-location nil
                  :projection-uniform-location nil}))
 
-(def model-matrix (.translate (Matrix4f.) 0.5 0.5 0))
-(def view-matrix (Matrix4f.))
+(def model-matrix (.translate (Matrix4f.) 0.0 0.0 0.0))
 
 (def vertex-shader
   (str "#version 150 core\n"
@@ -22,17 +22,14 @@
        "\n"
        "in vec3 color;\n"
        "uniform mat4 model;\n"
+       "uniform mat4 view;\n"
+       "uniform mat4 projection;\n"
        "\n"
        "out vec3 vertexColor;\n"
        "\n"
        "void main() {\n"
        "    vertexColor = color;\n"
-       "    mat4x4 mvp = mat4x4(0.0);\n"
-       "    mvp[0] = vec4(1.0, 0.0, 0.0, 0.0);\n"
-       "    mvp[1] = vec4(0.0, 1.0, 0.0, 0.0);\n"
-       "    mvp[2] = vec4(0.0, 0.0, 1.0, 0.0);\n"
-       "    mvp[3] = vec4(0.0, 0.0, 0.0, 1.0);\n"
-       "    gl_Position = model * mvp * vec4(position, 1.0);\n"
+       "    gl_Position = projection * view * model * vec4(position, 1.0);\n"
        "}\n"))
 
 (def fragment-shader
@@ -46,10 +43,10 @@
        "    fragColor = vec4(vertexColor, 1.0);\n"
        "}\n"))
 
-(def sprite-quad-vertices (float-array [0.0 1.0 0.0 1.0 0.0 0.0
-                                        0.0 0.0 0.0 0.0 1.0 0.0
-                                        1.0 1.0 0.0 0.0 0.0 1.0
-                                        1.0 0.0 0.0 1.0 1.0 0.0]))
+(def sprite-quad-vertices (float-array [0.0 1.0 -1.0 1.0 0.0 0.0
+                                        0.0 0.0 -1.0 0.0 1.0 0.0
+                                        1.0 1.0 -1.0 0.0 0.0 1.0
+                                        1.0 0.0 -1.0 1.0 1.0 0.0]))
 
 (defn initialize-vbo
   []
@@ -103,6 +100,10 @@
 
     (let [model-location (GL32/glGetUniformLocation shader-program "model")
           _ (swap! data assoc :model-uniform-location model-location)
+          view-location (GL32/glGetUniformLocation shader-program "view")
+          _ (swap! data assoc :view-uniform-location view-location)
+          projection-location (GL32/glGetUniformLocation shader-program "projection")
+          _ (swap! data assoc :projection-uniform-location projection-location)
           float-size 4
 
           pos-attrib (GL32/glGetAttribLocation shader-program "position")
@@ -127,8 +128,16 @@
                 vertex-buffer-object]} @data]
     (GL32/glUseProgram shader-program-id)
 
-    (let [stack (MemoryStack/stackPush)]
-      (GL32/glUniformMatrix4fv (:model-uniform-location @data) false (.get model-matrix (.mallocFloat stack 16)))
+    (let [stack (MemoryStack/stackPush)
+          {:keys [model-uniform-location
+                  view-uniform-location
+                  projection-uniform-location]} @data]
+      ;; TODO: add camera API functions
+      (GL32/glUniformMatrix4fv model-uniform-location false (.get model-matrix (.mallocFloat stack 16)))
+      (println :model model-matrix)
+      (GL32/glUniformMatrix4fv view-uniform-location false (.get (:transform @camera/camera) (.mallocFloat stack 16)))
+      (println (:transform @camera/camera))
+      (GL32/glUniformMatrix4fv projection-uniform-location false (.get (:projection @camera/camera) (.mallocFloat stack 16)))
       (MemoryStack/stackPop))
 
     (GL32/glBindVertexArray vertex-array-object)
