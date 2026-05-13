@@ -1,6 +1,7 @@
 (ns pelinrakentaja-engine.graphics.renderer
   (:require [pelinrakentaja-engine.graphics.window :as window]
-            [pelinrakentaja-engine.graphics.sprite :as sprite])
+            [pelinrakentaja-engine.graphics.sprite-manager :as sprite-manager]
+            [pelinrakentaja-engine.config :as config])
   (:import [org.lwjgl.opengl GL GL32]
            [org.lwjgl.system MemoryStack])
   )
@@ -11,14 +12,14 @@
   []
   (GL/createCapabilities)
   (GL32/glClearColor 0.2 0.0 0.0 0.0)
-  (GL32/glViewport 0 0 640 480)
-  (sprite/initialize-sprite-core))
+  (GL32/glViewport 0 0 (config/get-config :window-default-x) (config/get-config :window-default-y))
+  (sprite-manager/initialize))
 
 (defn render
   []
 
   (GL32/glClear (bit-or GL32/GL_COLOR_BUFFER_BIT GL32/GL_DEPTH_BUFFER_BIT))
 
-  (sprite/render-sprite)
+  (sprite-manager/render)
 
   (window/swap-buffers))

@@ -1,5 +1,6 @@
 (ns pelinrakentaja-engine.dev.dev
   (:require [pelinrakentaja-engine.graphics.window :as window]
+            [pelinrakentaja-engine.graphics.camera :as camera]
             [pelinrakentaja-engine.graphics.renderer :as renderer]
             [pelinrakentaja-engine.utils.log :as log]))
 
@@ -12,6 +13,9 @@
   []
   (log/log :info :engine/run "Creating GLFW window")
   (window/create-window)
+  (camera/initialize-camera :x 0.0
+                            :y 10.0
+                            :z 5.0)
   (log/log :info :engine/run "Initializing GL renderer")
   (renderer/init-renderer)
   (while (not (window/should-window-close?))
