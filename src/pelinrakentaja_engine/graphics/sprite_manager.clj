@@ -20,5 +20,4 @@
     (add-sprite shader-and-uniforms transform2)))
 
 (defn render []
-  (doseq [s @sprites]
-    (sprite/render-sprite s)))
+  (sprite/render-sprite @sprites))

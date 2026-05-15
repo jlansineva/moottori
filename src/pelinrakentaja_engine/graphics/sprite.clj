@@ -40,10 +40,12 @@
        "    fragColor = vec4(vertexColor, 1.0);\n"
        "}\n"))
 
-(def sprite-quad-vertices (float-array [0.0 1.0 -1.0 1.0 0.0 0.0
-                                        0.0 0.0 -1.0 0.0 1.0 0.0
-                                        1.0 1.0 -1.0 0.0 0.0 1.0
-                                        1.0 0.0 -1.0 1.0 1.0 0.0]))
+(def sprite-vertices [0.0 1.0 -1.0 1.0 0.0 0.0
+                      0.0 0.0 -1.0 0.0 1.0 0.0
+                      1.0 1.0 -1.0 0.0 0.0 1.0
+                      1.0 0.0 -1.0 1.0 1.0 0.0])
+
+(def sprite-quad-vertices (float-array sprite-vertices))
 
 (defn retrieve-shader
   [shader-key]
@@ -64,16 +66,17 @@
 
 (defn initialize-vbo
   []
-  (let [stack (MemoryStack/stackPush)
-        vertices-buffer (.mallocFloat stack (count sprite-quad-vertices))
+  (let [vertices (float-array sprite-vertices)
+        stack (MemoryStack/stackPush)
+        vertices-buffer (.mallocFloat stack (count vertices))
         vertex-buffer-object-id (GL32/glGenBuffers)
         ;; TODO just gl_array_buffer?
         ]
     (doto vertices-buffer
-      (.put sprite-quad-vertices)
+      (.put vertices)
       (.flip))
     (GL32/glBindBuffer GL32/GL_ARRAY_BUFFER vertex-buffer-object-id)
-    (GL32/glBufferData GL32/GL_ARRAY_BUFFER sprite-quad-vertices GL32/GL_STATIC_DRAW)
+    (GL32/glBufferData GL32/GL_ARRAY_BUFFER vertices GL32/GL_STATIC_DRAW)
     (swap! data assoc :vertex-buffer-object vertex-buffer-object-id)
     (MemoryStack/stackPop))
   ;; TODO: add possibility to generate VBOs for more different quads.
@@ -136,22 +139,23 @@
 (defn render-sprite
   [context]
   (let [{:keys [vertex-array-object
-                vertex-buffer-object]} @data
-        {:keys [shader-program-id
-                model-uniform-location
-                view-uniform-location
-                projection-uniform-location
-                model-matrix]} context]
-    (GL32/glUseProgram shader-program-id)
-
-    (let [stack (MemoryStack/stackPush)]
-      ;; TODO: add camera API functions
-      (GL32/glUniformMatrix4fv model-uniform-location false (.get model-matrix (.mallocFloat stack 16)))
-      (GL32/glUniformMatrix4fv view-uniform-location false (.get (:transform @camera/camera) (.mallocFloat stack 16)))
-      (GL32/glUniformMatrix4fv projection-uniform-location false (.get (:projection @camera/camera) (.mallocFloat stack 16)))
-      (MemoryStack/stackPop))
-
+                vertex-buffer-object]} @data]
     (GL32/glBindVertexArray vertex-array-object)
     (GL32/glBindBuffer GL32/GL_ARRAY_BUFFER vertex-buffer-object)
-    ;; TODO: allow for creating large arrays
-    (GL32/glDrawArrays GL32/GL_TRIANGLE_STRIP 0 4)))
+
+    (doseq [s context]
+      (let [{:keys [shader-program-id
+                    model-uniform-location
+                    view-uniform-location
+                    projection-uniform-location
+                    model-matrix]} s]
+        (GL32/glUseProgram shader-program-id)
+
+        (let [stack (MemoryStack/stackPush)]
+          ;; TODO: add camera API functions
+          (GL32/glUniformMatrix4fv model-uniform-location false (.get model-matrix (.mallocFloat stack 16)))
+          (GL32/glUniformMatrix4fv view-uniform-location false (.get (:transform @camera/camera) (.mallocFloat stack 16)))
+          (GL32/glUniformMatrix4fv projection-uniform-location false (.get (:projection @camera/camera) (.mallocFloat stack 16)))
+          (MemoryStack/stackPop)))
+
+      (GL32/glDrawArrays GL32/GL_TRIANGLE_STRIP 0 4))))
