@@ -1,13 +1,13 @@
 (ns pelinrakentaja-engine.core.desktop-launcher
-  (:require ;[pelinrakentaja-engine.core.game :refer :all]
-     ;       [pelinrakentaja-engine.core.debug-events :as debug-events]
-     ;       [pelinrakentaja-engine.core.core-events :as core-events]
-     ;       [pelinrakentaja-engine.core.core-listeners :as core-listeners]
-     ;       [pelinrakentaja-engine.core.events :as events]
-     ;       [pelinrakentaja-engine.config :as config]
-     ;       [pelinrakentaja-engine.core.audio :as audio]
-            [pelinrakentaja-engine.graphics.window :as window])
-  )
+
+  #_(:require             ;[pelinrakentaja-engine.core.game :refer :all]
+                                        ;       [pelinrakentaja-engine.core.debug-events :as debug-events]
+                                        ;       [pelinrakentaja-engine.core.core-events :as core-events]
+                                        ;       [pelinrakentaja-engine.core.core-listeners :as core-listeners]
+                                        ;       [pelinrakentaja-engine.core.events :as events]
+                                        ;       [pelinrakentaja-engine.config :as config]
+                                        ;       [pelinrakentaja-engine.core.audio :as audio]
+   ))
 
 (defn setup-window
   [{:keys [title width height]}]
@@ -47,8 +47,4 @@
  ; (events/register-listener :input/mouse-position [:input :mouse :position] core-listeners/mouse-position)
  ; (events/register-listener :input/mouse-pressed [:input :mouse] core-listeners/mouse-pressed)
 
-  (window/create-window))
-
-(defn -main []
-  (setup-window {})
-  #_(Keyboard/enableRepeatEvents true))
+  )

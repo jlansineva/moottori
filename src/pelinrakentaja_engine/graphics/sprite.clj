@@ -89,21 +89,20 @@
     (GL32/glBindVertexArray vertex-array-object-id)
     (swap! data assoc :vertex-array-object vertex-array-object-id)))
 
+(defn compile-shader
+  [& {:keys [shader-id shader shader-program]}]
+  (GL32/glShaderSource shader-id shader)
+  (GL32/glCompileShader shader-id)
+  (GL32/glAttachShader shader-program shader-id))
+
 (defn compile-shaders
   []
   (let [vertex-shader-id   (GL32/glCreateShader GL32/GL_VERTEX_SHADER)
         fragment-shader-id (GL32/glCreateShader GL32/GL_FRAGMENT_SHADER)
         shader-program     (GL32/glCreateProgram)]
 
-    ;; TODO DRY
-    (GL32/glShaderSource vertex-shader-id vertex-shader)
-    (GL32/glCompileShader vertex-shader-id)
-
-    (GL32/glShaderSource fragment-shader-id fragment-shader)
-    (GL32/glCompileShader fragment-shader-id)
-
-    (GL32/glAttachShader shader-program vertex-shader-id)
-    (GL32/glAttachShader shader-program fragment-shader-id)
+    (compile-shader :shader-id vertex-shader-id :shader vertex-shader :shader-progam shader-program)
+    (compile-shader :shader-id fragment-shader-id :shader fragment-shader :shader-progam shader-program)
 
     (GL32/glBindFragDataLocation shader-program 0 "fragColor")
     (GL32/glLinkProgram shader-program)
@@ -127,14 +126,14 @@
 
           col-attrib (GL32/glGetAttribLocation shader-program "color")
           _          (GL32/glEnableVertexAttribArray col-attrib)
-          _          (GL32/glVertexAttribPointer col-attrib 3 GL32/GL_FLOAT false (* 6 float-size) (* 3 float-size))])))
+          _          (GL32/glVertexAttribPointer col-attrib 3 GL32/GL_FLOAT false (* 6 float-size) (* 3 float-size))]))
 
 ;; TODO: initializes just a single quad type. It might be useful to provide options for a set of quads in a single VBO
-(defn initialize-sprite-core
-  []
-  (initialize-vao)
-  (initialize-vbo)
-  (compile-shaders))
+  (defn initialize-sprite-core
+    []
+    (initialize-vao)
+    (initialize-vbo)
+    (compile-shaders)))
 
 (defn render-sprite
   [context]

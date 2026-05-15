@@ -12,6 +12,9 @@
   Moottori is event-driven. Games using Moottori would subscribe to an input event-provider
   and dispatch entity-events."
   (:require [pelinrakentaja-engine.core.desktop-launcher :as launcher]
+            [pelinrakentaja-engine.graphics.window :as window]
+            [pelinrakentaja-engine.graphics.camera :as camera]
+            [pelinrakentaja-engine.graphics.renderer :as renderer]
             #_[pelinrakentaja-engine.core.events :as events]
             [pelinrakentaja-engine.utils.log :as log]
         ;    [pelinrakentaja-engine.utils.keys :as keys]
@@ -33,11 +36,21 @@
     (nrepl/launch-nrepl))
   (launcher/setup-window {:title title}))
 
+(defn initialize
+  []
+  (log/log :info :engine/run "Creating GLFW window")
+  (window/create-window)
+  (camera/initialize-camera :x 0.0
+                            :y 10.0
+                            :z 5.0)
+  (log/log :info :engine/run "Initializing GL renderer")
+  (renderer/init-renderer))
+
 (defmacro game-loop
   [& body]
   `(let [~'loop-fn (fn []
-                   (do ~@body)
-                   (System/exit 0))]
+                     (do ~@body)
+                     (System/exit 0))]
      (.start (Thread. ~'loop-fn))))
 
 ;; needs to register entities
