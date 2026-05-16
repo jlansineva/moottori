@@ -20,7 +20,8 @@
         ;    [pelinrakentaja-engine.utils.keys :as keys]
             [pelinrakentaja-engine.utils.nrepl :as nrepl]
             [pelinrakentaja-engine.core.state :as state]
-            )
+
+            [pelinrakentaja-engine.input.handler :as handler])
   (:gen-class))
 
 ;; TODO:
@@ -65,6 +66,7 @@
 (defn update!
   "Calling update somewhere in your logic updates the engine event queue and state. This is required."
   []
+  (handler/update-inputs)
                                         ; (events/update-queue)
   (log/print-logs)
   (Thread/sleep 16))

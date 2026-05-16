@@ -91,6 +91,7 @@
 
 (defn compile-shader
   [& {:keys [shader-id shader shader-program]}]
+  (prn shader-id shader shader-program)
   (GL32/glShaderSource shader-id shader)
   (GL32/glCompileShader shader-id)
   (GL32/glAttachShader shader-program shader-id))
@@ -101,8 +102,8 @@
         fragment-shader-id (GL32/glCreateShader GL32/GL_FRAGMENT_SHADER)
         shader-program     (GL32/glCreateProgram)]
 
-    (compile-shader :shader-id vertex-shader-id :shader vertex-shader :shader-progam shader-program)
-    (compile-shader :shader-id fragment-shader-id :shader fragment-shader :shader-progam shader-program)
+    (compile-shader :shader-id vertex-shader-id :shader vertex-shader :shader-program shader-program)
+    (compile-shader :shader-id fragment-shader-id :shader fragment-shader :shader-program shader-program)
 
     (GL32/glBindFragDataLocation shader-program 0 "fragColor")
     (GL32/glLinkProgram shader-program)
@@ -129,11 +130,12 @@
           _          (GL32/glVertexAttribPointer col-attrib 3 GL32/GL_FLOAT false (* 6 float-size) (* 3 float-size))]))
 
 ;; TODO: initializes just a single quad type. It might be useful to provide options for a set of quads in a single VBO
-  (defn initialize-sprite-core
+  )
+(defn initialize-sprite-core
     []
     (initialize-vao)
     (initialize-vbo)
-    (compile-shaders)))
+    (compile-shaders))
 
 (defn render-sprite
   [context]

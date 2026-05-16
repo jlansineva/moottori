@@ -29,25 +29,29 @@
 
 (defn initialize-camera
   [& {:keys [x y z]
-      :or {x 0.0
-           y 10.0
-           z 5.0}}]
+      :or   {x 0.0
+             y 10.0
+             z 5.0}}]
   #_(set-camera-position :x x :y y :z z)
-  (handler/setup-handler GLFW/GLFW_KEY_LEFT
-                         (fn [_context]
-                           (swap! camera update :transform (fn [transform]
-                                                             (.translate transform -0.2 0.0 0.0)))))
-  (handler/setup-handler GLFW/GLFW_KEY_RIGHT
-                         (fn [_context]
-                           (swap! camera update :transform (fn [transform]
-                                                             (.translate transform 0.2 0.0 0.0)))))
+  (handler/setup-handlers GLFW/GLFW_KEY_LEFT
+                          :on-held-fn (fn [_context]
+                                        (swap! camera update :transform (fn [transform]
+                                                                          (.translate transform -0.2 0.0 0.0)))))
+  (handler/setup-handlers GLFW/GLFW_KEY_RIGHT
+                          :on-held-fn (fn [_context]
+                                        (swap! camera update :transform (fn [transform]
+                                                                          (.translate transform 0.2 0.0 0.0)))))
 
-  (handler/setup-handler GLFW/GLFW_KEY_UP
-                         (fn [_context]
-                           (swap! camera update :transform (fn [transform]
-                                                             (.translate transform 0.0 -0.2 0.0)))))
+  (handler/setup-handlers GLFW/GLFW_KEY_UP
+                          :on-held-fn (fn [_context]
+                                        (swap! camera update :transform (fn [transform]
+                                                                          (.translate transform 0.0 -0.2 0.0)))))
 
-  (handler/setup-handler GLFW/GLFW_KEY_DOWN
-                         (fn [_context]
-                           (swap! camera update :transform (fn [transform]
-                                                             (.translate transform 0.0 0.2 0.0))))))
+  (handler/setup-handlers GLFW/GLFW_KEY_DOWN
+                          :on-held-fn (fn [_context]
+                                        (swap! camera update :transform (fn [transform]
+                                                                          (.translate transform 0.0 0.2 0.0))))))
+
+(defn update-camera
+  []
+  )
