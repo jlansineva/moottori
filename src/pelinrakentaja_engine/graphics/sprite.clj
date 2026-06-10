@@ -102,10 +102,13 @@
 ;; TODO: initializes just a single quad type. It might be useful to provide options for a set of quads in a single VBO
   )
 (defn initialize-sprite-core
-    []
-    (initialize-vao)
-    (initialize-vbo)
-    (compile-shaders))
+  []
+  (log/log log/default-log-level :engine/sprite "Initialize VAO")
+  (initialize-vao)
+  (log/log log/default-log-level :engine/sprite "Initialize VBO")
+  (initialize-vbo)
+  (log/log log/default-log-level :engine/sprite "Initialize Shaders")
+  (compile-shaders))
 
 (defn render-sprite
   [context]

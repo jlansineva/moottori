@@ -1,4 +1,5 @@
 (ns pelinrakentaja-engine.graphics.shaders
+  (:require [pelinrakentaja-engine.utils.log :as log])
   (:import [org.lwjgl.opengl GL GL32]
            [org.lwjgl.system MemoryStack]
            [org.joml Matrix4f]))
@@ -32,23 +33,26 @@
 
 (defn with-shader
   [shaders]
+  (log/log log/default-log-level :engine/shaders "Creating shaders" shaders)
   (cond-> {}
-      (some #{:vertex} shaders)
-      (assoc :vertex (GL32/glCreateShader GL32/GL_VERTEX_SHADER))
+    (some #{:vertex} shaders)
+    (assoc :vertex (GL32/glCreateShader GL32/GL_VERTEX_SHADER))
 
-      (some #{:fragment} shaders)
-      (assoc :fragment (GL32/glCreateShader GL32/GL_FRAGMENT_SHADER))
+    (some #{:fragment} shaders)
+    (assoc :fragment (GL32/glCreateShader GL32/GL_FRAGMENT_SHADER))
 
-      (some #{:program} shaders)
-      (assoc :program (GL32/glCreateProgram))))
+    (some #{:program} shaders)
+    (assoc :program (GL32/glCreateProgram))))
 
 (defn source-and-compile
   [shader-id shader-glsl]
+  (log/log log/default-log-level :engine/shaders "Sourcing and compiling shader" shader-id)
   (GL32/glShaderSource shader-id shader-glsl)
   (GL32/glCompileShader shader-id))
 
 (defn attach-to-program
   [shader-id shader-program]
+  (log/log log/default-log-level :engine/shaders "Attaching shader to program" shader-id shader-program)
   (GL32/glAttachShader shader-program shader-id))
 
 (defn bind-fragdata-location
@@ -60,13 +64,14 @@
   (GL32/glLinkProgram shader-program))
 
 (defn create-shader [& {:keys [shaders glsl bindings]}]
-  {:pre []}
+#_  {:pre []}
   (let [{:keys [program] :as shaders-and-program}
         (with-shader shaders)]
     (doseq [s shaders]
-      (let [shader-glsl (get glsl s)]
-        (source-and-compile (get shaders-and-program s) shader-glsl)
-        (attach-to-program (get shaders-and-program s) program)))
+      (when-not (= s :program)
+        (let [shader-glsl (get glsl s)]
+          (source-and-compile (get shaders-and-program s) shader-glsl)
+          (attach-to-program (get shaders-and-program s) program))))
     (bind-fragdata-location program
                             (get-in bindings [:fragdata-location :color-number])
                             (get-in bindings [:fragdata-location :out-name]))

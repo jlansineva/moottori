@@ -10,6 +10,9 @@
 
 (def log-queue (atom []))
 
+;; TODO rework to have a searate logging mode for this
+(def default-log-level :immediate)
+
 (defn set-log-level!
   [log-level] ;; TODO
   (if (some? (get enabled-log-levels log-level))
@@ -36,4 +39,6 @@
              (:all enabled-logs))
          (or (log-level enabled-log-levels)
              (:all enabled-log-levels)))
-    (swap! log-queue conj (str logger ": " (str/join " : " params)))))
+    (if (= log-level :immediate)
+      (println (str logger ": " (str/join " : " params)))
+      (swap! log-queue conj (str logger ": " (str/join " : " params))))))

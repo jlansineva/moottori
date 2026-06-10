@@ -12,7 +12,9 @@
 ;; TODO this is blocking, so only for testing purposes. need to implement some loop approach
 (defn run-quad-test
   []
+  (prn :a)
   (core/initialize)
+  (prn :b)
   (while (not (window/should-window-close?))
     (renderer/render)
     (window/poll-events)

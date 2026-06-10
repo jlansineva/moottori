@@ -39,12 +39,12 @@
 
 (defn initialize
   []
-  (log/log :info :engine/run "Creating GLFW window")
+  (log/log :immediate :engine/run "Creating GLFW window")
   (window/create-window)
   (camera/initialize-camera :x 0.0
                             :y 10.0
                             :z 5.0)
-  (log/log :info :engine/run "Initializing GL renderer")
+  (log/log :immediate :engine/run "Initializing GL renderer")
   (renderer/init-renderer))
 
 (defmacro game-loop

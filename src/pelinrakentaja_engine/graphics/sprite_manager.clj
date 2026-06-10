@@ -1,5 +1,6 @@
 (ns pelinrakentaja-engine.graphics.sprite-manager
-  (:require [pelinrakentaja-engine.graphics.sprite :as sprite])
+  (:require [pelinrakentaja-engine.graphics.sprite :as sprite]
+            [pelinrakentaja-engine.utils.log :as log])
   (:import [org.joml Matrix4f]))
 
 (def sprites (atom []))
@@ -12,6 +13,7 @@
 
 (defn initialize
   []
+  (log/log log/default-log-level :engine/sprite-manager "Initializing sprite-core")
   (sprite/initialize-sprite-core)
   (let [shader-and-uniforms (sprite/retrieve-shader ::sprite/default)
         transform {:x 0.0 :y 0.0 :z 0.0}
