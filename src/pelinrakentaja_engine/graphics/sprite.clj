@@ -1,6 +1,7 @@
 (ns pelinrakentaja-engine.graphics.sprite
   (:require [pelinrakentaja-engine.utils.log :as log]
-            [pelinrakentaja-engine.graphics.camera :as camera])
+            [pelinrakentaja-engine.graphics.camera :as camera]
+            [pelinrakentaja-engine.graphics.shaders :as shaders])
   (:import [org.lwjgl.opengl GL GL32]
            [org.lwjgl.system MemoryStack]
            [org.joml Matrix4f]))
@@ -13,32 +14,9 @@
 
 (def shaders (atom {}))
 
-(def vertex-shader
-  (str "#version 150 core\n"
-       "in vec3 position;\n"
-       "\n"
-       "in vec3 color;\n"
-       "uniform mat4 model;\n"
-       "uniform mat4 view;\n"
-       "uniform mat4 projection;\n"
-       "\n"
-       "out vec3 vertexColor;\n"
-       "\n"
-       "void main() {\n"
-       "    vertexColor = color;\n"
-       "    gl_Position = projection * view * model * vec4(position, 1.0);\n"
-       "}\n"))
 
-(def fragment-shader
-  (str "#version 150 core\n"
-       "\n"
-       "in vec3 vertexColor;\n"
-       "\n"
-       "out vec4 fragColor;\n"
-       "\n"
-       "void main() {\n"
-       "    fragColor = vec4(vertexColor, 1.0);\n"
-       "}\n"))
+
+
 
 (def sprite-vertices [0.0 1.0 -1.0 1.0 0.0 0.0
                       0.0 0.0 -1.0 0.0 1.0 0.0
@@ -89,43 +67,35 @@
     (GL32/glBindVertexArray vertex-array-object-id)
     (swap! data assoc :vertex-array-object vertex-array-object-id)))
 
-(defn compile-shader
-  [& {:keys [shader-id shader shader-program]}]
-  (prn shader-id shader shader-program)
-  (GL32/glShaderSource shader-id shader)
-  (GL32/glCompileShader shader-id)
-  (GL32/glAttachShader shader-program shader-id))
+
 
 (defn compile-shaders
   []
-  (let [vertex-shader-id   (GL32/glCreateShader GL32/GL_VERTEX_SHADER)
-        fragment-shader-id (GL32/glCreateShader GL32/GL_FRAGMENT_SHADER)
-        shader-program     (GL32/glCreateProgram)]
+  (let [{:keys [vertex fragment program]}
+        (shaders/create-shader :shaders [:fragment :vertex :program]
+                               :glsl {:fragment shaders/fragment-shader-basic
+                                      :vertex shaders/vertex-shader-basic}
+                               :bindings {:fragdata-location {:color-number 0
+                                                              :out-name "fragColor"}})]
 
-    (compile-shader :shader-id vertex-shader-id :shader vertex-shader :shader-program shader-program)
-    (compile-shader :shader-id fragment-shader-id :shader fragment-shader :shader-program shader-program)
-
-    (GL32/glBindFragDataLocation shader-program 0 "fragColor")
-    (GL32/glLinkProgram shader-program)
-
-    (let [model-location      (GL32/glGetUniformLocation shader-program "model")
-          view-location       (GL32/glGetUniformLocation shader-program "view")
-          projection-location (GL32/glGetUniformLocation shader-program "projection")
+    (let [model-location      (GL32/glGetUniformLocation program "model")
+          view-location       (GL32/glGetUniformLocation program "view")
+          projection-location (GL32/glGetUniformLocation program "projection")
 
           _          (store-shader ::default
-                                   :shader-program-id shader-program
-                                   :fragment-shader-id fragment-shader-id
-                                   :vertex-shader-id vertex-shader-id
+                                   :shader-program-id program
+                                   :fragment-shader-id fragment
+                                   :vertex-shader-id vertex
                                    :model-uniform-location model-location
                                    :view-uniform-location view-location
                                    :projection-uniform-location projection-location)
           float-size 4
 
-          pos-attrib (GL32/glGetAttribLocation shader-program "position")
+          pos-attrib (GL32/glGetAttribLocation program "position")
           _          (GL32/glEnableVertexAttribArray pos-attrib)
           _          (GL32/glVertexAttribPointer pos-attrib 3 GL32/GL_FLOAT false (* 6 float-size) 0)
 
-          col-attrib (GL32/glGetAttribLocation shader-program "color")
+          col-attrib (GL32/glGetAttribLocation program "color")
           _          (GL32/glEnableVertexAttribArray col-attrib)
           _          (GL32/glVertexAttribPointer col-attrib 3 GL32/GL_FLOAT false (* 6 float-size) (* 3 float-size))]))
 
