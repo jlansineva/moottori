@@ -12,35 +12,12 @@
                  :view-uniform-location nil
                  :projection-uniform-location nil}))
 
-(def shaders (atom {}))
-
-
-
-
-
 (def sprite-vertices [0.0 1.0 -1.0 1.0 0.0 0.0
                       0.0 0.0 -1.0 0.0 1.0 0.0
                       1.0 1.0 -1.0 0.0 0.0 1.0
                       1.0 0.0 -1.0 1.0 1.0 0.0])
 
 (def sprite-quad-vertices (float-array sprite-vertices))
-
-(defn retrieve-shader
-  [shader-key]
-  (get @shaders shader-key))
-
-(defn store-shader
-  [shader-key
-   & {:keys [shader-program-id vertex-shader-id fragment-shader-id
-             model-uniform-location view-uniform-location projection-uniform-location]}]
-  (when-not (get @shaders shader-key)
-    (let [program-map {:shader-program-id           shader-program-id
-                       :vertex-shader-id            vertex-shader-id
-                       :fragment-shader-id          fragment-shader-id
-                       :model-uniform-location      model-uniform-location
-                       :view-uniform-location       view-uniform-location
-                       :projection-uniform-location projection-uniform-location}]
-      (swap! shaders assoc shader-key program-map))))
 
 (defn initialize-vbo
   []
@@ -76,28 +53,18 @@
                                :glsl {:fragment shaders/fragment-shader-basic
                                       :vertex shaders/vertex-shader-basic}
                                :bindings {:fragdata-location {:color-number 0
-                                                              :out-name "fragColor"}})]
+                                                              :out-name "fragColor"}})
 
-    (let [model-location      (GL32/glGetUniformLocation program "model")
-          view-location       (GL32/glGetUniformLocation program "view")
-          projection-location (GL32/glGetUniformLocation program "projection")
-
-          _          (store-shader ::default
-                                   :shader-program-id program
-                                   :fragment-shader-id fragment
-                                   :vertex-shader-id vertex
-                                   :model-uniform-location model-location
-                                   :view-uniform-location view-location
-                                   :projection-uniform-location projection-location)
-          float-size 4
-
-          pos-attrib (GL32/glGetAttribLocation program "position")
-          _          (GL32/glEnableVertexAttribArray pos-attrib)
-          _          (GL32/glVertexAttribPointer pos-attrib 3 GL32/GL_FLOAT false (* 6 float-size) 0)
-
-          col-attrib (GL32/glGetAttribLocation program "color")
-          _          (GL32/glEnableVertexAttribArray col-attrib)
-          _          (GL32/glVertexAttribPointer col-attrib 3 GL32/GL_FLOAT false (* 6 float-size) (* 3 float-size))]))
+        [model-location view-location projection-location] (shaders/get-uniform-locations program "model" "view" "projection")]
+    (shaders/store-shader ::default
+                                         :shader-program-id program
+                                         :fragment-shader-id fragment
+                                         :vertex-shader-id vertex
+                                         :model-uniform-location model-location
+                                         :view-uniform-location view-location
+                                         :projection-uniform-location projection-location)
+    (shaders/set-attribute-pointer-in-vao-for-location program "position")
+    (shaders/set-attribute-pointer-in-vao-for-location program "color"))
 
 ;; TODO: initializes just a single quad type. It might be useful to provide options for a set of quads in a single VBO
   )

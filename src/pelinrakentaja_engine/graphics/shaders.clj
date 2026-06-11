@@ -1,8 +1,28 @@
 (ns pelinrakentaja-engine.graphics.shaders
-  (:require [pelinrakentaja-engine.utils.log :as log])
+  (:require [pelinrakentaja-engine.utils.log :as log]
+            [pelinrakentaja-engine.utils.definitions :as definitions])
   (:import [org.lwjgl.opengl GL GL32]
            [org.lwjgl.system MemoryStack]
            [org.joml Matrix4f]))
+
+(def shaders (atom {}))
+
+(defn retrieve-shader
+  [shader-key]
+  (get @shaders shader-key))
+
+(defn store-shader
+  [shader-key
+   & {:keys [shader-program-id vertex-shader-id fragment-shader-id
+             model-uniform-location view-uniform-location projection-uniform-location]}]
+  (when-not (get @shaders shader-key)
+    (let [program-map {:shader-program-id           shader-program-id
+                       :vertex-shader-id            vertex-shader-id
+                       :fragment-shader-id          fragment-shader-id
+                       :model-uniform-location      model-uniform-location
+                       :view-uniform-location       view-uniform-location
+                       :projection-uniform-location projection-uniform-location}]
+      (swap! shaders assoc shader-key program-map))))
 
 (def vertex-shader-basic
   (str "#version 150 core\n"
@@ -78,3 +98,17 @@
     (link-program program)
 
     shaders-and-program))
+
+(defn- get-uniform-location
+  [program location]   ;; TODO error check
+  (GL32/glGetUniformLocation program location))
+
+(defn get-uniform-locations
+  [program & locations]
+  (mapv (partial get-uniform-location program) locations))
+
+(defn set-attribute-pointer-in-vao-for-location
+  [program location]
+  (let [attribute (GL32/glGetAttribLocation program location)]
+    (GL32/glEnableVertexAttribArray attribute)
+    (GL32/glVertexAttribPointer attribute 3 GL32/GL_FLOAT false (* 6 definitions/size-float) 0)))
