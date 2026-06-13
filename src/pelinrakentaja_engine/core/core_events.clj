@@ -1,8 +1,5 @@
 (ns pelinrakentaja-engine.core.core-events
-  (:require [pelinrakentaja-engine.utils.log :as log]
-            [pelinrakentaja-engine.core.entities :as entities]
-            [pelinrakentaja-engine.core.graphics.textures :as textures]
-            [pelinrakentaja-engine.core.audio :as audio]))
+  (:require [pelinrakentaja-engine.utils.log :as log]))
 
 (defn load-resource
   "General loading method for resources"
@@ -40,31 +37,6 @@
   (cond-> state
         (some? resource) (assoc-in [:resources resource-type resource-id] resource)
         true (update-in [:engine :graphics :resource-load-queue] (comp vec rest))))
-
-(defn load-resource-file
-  [state id path type]
-  (let [resource-file (case type
-                        :texture (textures/load-texture-from-resource id path)
-                        :music (audio/load-music-from-resources id path)
-                        :sfx (audio/load-sfx-from-resources id path))]
-    (resource-loaded state type id resource-file)))
-
-(defn add-entity
-  [state entity]
-  {:pre [(some? (:x entity))
-         (some? (:y entity))
-         (some? (:type entity))]}
-  (let [new-entity (entities/create-entity entity)]
-    (log/log :debug :event-handlers/add-entity entity)
-    (cond-> state
-        new-entity (update-in [:engine :graphics :render-queue] conj (:id new-entity))
-        new-entity (assoc-in [:engine :entities (:id new-entity)] new-entity))))
-
-(defn add-entities
-  [state & entities]
-  (reduce add-entity
-          state
-          entities))
 
 (defn update-entity-id-with-fn
   [state entity-id modifier-fn]
