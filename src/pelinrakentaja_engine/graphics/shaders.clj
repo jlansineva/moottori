@@ -107,6 +107,7 @@
   [program & locations]
   (mapv (partial get-uniform-location program) locations))
 
+;; todo in vao.clj
 (defn set-attribute-pointer-in-vao-for-location
   [program location]
   (let [attribute (GL32/glGetAttribLocation program location)]

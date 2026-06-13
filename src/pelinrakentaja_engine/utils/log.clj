@@ -13,7 +13,7 @@
 
 (def log-queue (atom []))
 
-(def default-log-level :important)
+(def default-log-level :info)
 
 (defn set-log-level!
   [log-level] ;; TODO this would let you adjust log-level hierachically eg you could have most important logs up to certain point. think different verbose levels.

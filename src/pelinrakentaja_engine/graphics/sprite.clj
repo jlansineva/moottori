@@ -1,7 +1,8 @@
 (ns pelinrakentaja-engine.graphics.sprite
   (:require [pelinrakentaja-engine.utils.log :as log]
             [pelinrakentaja-engine.graphics.camera :as camera]
-            [pelinrakentaja-engine.graphics.shaders :as shaders])
+            [pelinrakentaja-engine.graphics.shaders :as shaders]
+            [pelinrakentaja-engine.graphics.vao :as vao])
   (:import [org.lwjgl.opengl GL GL32]
            [org.lwjgl.system MemoryStack]
            [org.joml Matrix4f]))
@@ -37,15 +38,6 @@
   ;; TODO: add possibility to generate VBOs for more different quads.
   )
 
-(defn initialize-vao
-  []
-  (let [vertex-array-object-id (GL32/glGenVertexArrays)]
-    (log/log :info :graphics/sprite "Generating VAO" "errors" )
-    (GL32/glBindVertexArray vertex-array-object-id)
-    (swap! data assoc :vertex-array-object vertex-array-object-id)))
-
-
-
 (defn compile-shaders
   []
   (let [{:keys [vertex fragment program]}
@@ -71,7 +63,7 @@
 (defn initialize-sprite-core
   []
   (log/log log/default-log-level :engine/sprite "Initialize VAO")
-  (initialize-vao)
+  (vao/initialize-vao ::sprite)
   (log/log log/default-log-level :engine/sprite "Initialize VBO")
   (initialize-vbo)
   (log/log log/default-log-level :engine/sprite "Initialize Shaders")
@@ -79,9 +71,8 @@
 
 (defn render-sprite
   [context]
-  (let [{:keys [vertex-array-object
-                vertex-buffer-object]} @data]
-    (GL32/glBindVertexArray vertex-array-object)
+  (let [{:keys [vertex-buffer-object]} @data]
+    (vao/bind-vertex-array ::sprite)
     (GL32/glBindBuffer GL32/GL_ARRAY_BUFFER vertex-buffer-object)
 
     (doseq [s context]
@@ -90,6 +81,8 @@
                     view-uniform-location
                     projection-uniform-location
                     model-matrix]} s]
+        (log/log :info :sprite/render-sprite s)
+        (log/log :info :sprite/render-sprite @data)
         (GL32/glUseProgram shader-program-id)
 
         (let [stack (MemoryStack/stackPush)]
