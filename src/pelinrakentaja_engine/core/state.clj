@@ -35,6 +35,17 @@
   [engine-id]
   (get-engine-state-path [:engine :graphics :vaos engine-id]))
 
+(defn add-buffer-info
+  [engine-id buffer-id buffer-type binding-target usage]
+  (set-engine-state-path [:engine :graphics :buffers engine-id] {:buffer-id buffer-id
+                                                                 :buffer-internal-type buffer-type
+                                                                 :binding-target binding-target
+                                                                 :usage usage}))
+
+(defn get-buffer-info
+  [engine-id]
+  (get-engine-state-path [:engine :graphics :buffers engine-id]))
+
 (comment {:type :id
           :texture "some.png"}
 

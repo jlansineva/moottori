@@ -113,3 +113,7 @@
   (let [attribute (GL32/glGetAttribLocation program location)]
     (GL32/glEnableVertexAttribArray attribute)
     (GL32/glVertexAttribPointer attribute 3 GL32/GL_FLOAT false (* 6 definitions/size-float) 0)))
+
+(defn use-program
+  [program]
+  (GL32/glUseProgram program))
