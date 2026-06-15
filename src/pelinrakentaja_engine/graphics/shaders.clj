@@ -5,24 +5,28 @@
            [org.lwjgl.system MemoryStack]
            [org.joml Matrix4f]))
 
-(def shaders (atom {}))
+(defonce -shaders (atom {}))
+
+(defonce -uniforms (atom {}))
 
 (defn retrieve-shader
   [shader-key]
-  (get @shaders shader-key))
+  (get @-shaders shader-key))
 
 (defn store-shader
   [shader-key
-   & {:keys [shader-program-id vertex-shader-id fragment-shader-id
-             model-uniform-location view-uniform-location projection-uniform-location]}]
-  (when-not (get @shaders shader-key)
-    (let [program-map {:shader-program-id           shader-program-id
-                       :vertex-shader-id            vertex-shader-id
-                       :fragment-shader-id          fragment-shader-id
-                       :model-uniform-location      model-uniform-location
-                       :view-uniform-location       view-uniform-location
-                       :projection-uniform-location projection-uniform-location}]
-      (swap! shaders assoc shader-key program-map))))
+   & {:keys [shader-program-id shaders uniforms]}]
+  (when-not (get @-shaders shader-key)
+    (let [uniform-keys (mapv :uniform-id uniforms)
+          uniform-data (reduce (fn [collected uniform]
+                                 (assoc collected (:uniform-id uniform) uniform))
+                               {}
+                               uniforms)
+          program-map {:shader-program-id           shader-program-id
+                       :shaders shaders
+                       :uniforms uniform-keys}]
+      (swap! -uniforms merge uniform-data)
+      (swap! -shaders assoc shader-key program-map))))
 
 (def vertex-shader-basic
   (str "#version 150 core\n"
@@ -117,3 +121,18 @@
 (defn use-program
   [program]
   (GL32/glUseProgram program))
+
+(defonce uniform-fns
+  {:mat4f GL32/glUniformMatrix4fv})
+
+(defn retrieve-uniform
+  [uniform-key]
+  (let [uniform-data (get @-uniforms uniform-key)
+        uniform-fn (get uniform-fns (:uniform-type uniform-data))]
+    {:uniform-fn uniform-fn
+     :data uniform-data}))
+
+(defn set-uniform
+  [uniform-key & uniform-fn-params]
+  (let [{:keys [uniform-fn data]} (retrieve-uniform uniform-key)]
+    (apply uniform-fn (:location data) uniform-fn-params)))

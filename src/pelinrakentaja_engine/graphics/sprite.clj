@@ -23,20 +23,27 @@
   []
   (let [{:keys [vertex fragment program]}
         (shaders/create-shader
-          :shaders [:fragment :vertex :program]
-          :glsl {:fragment shaders/fragment-shader-basic
-                 :vertex shaders/vertex-shader-basic}
-          :bindings {:fragdata-location {:color-number 0
-                                         :out-name "fragColor"}})
+         :shaders [:fragment :vertex :program]
+         :glsl {:fragment shaders/fragment-shader-basic
+                :vertex shaders/vertex-shader-basic}
+         :bindings {:fragdata-location {:color-number 0
+                                        :out-name "fragColor"}})
 
         [model-location view-location projection-location] (shaders/get-uniform-locations program "model" "view" "projection")]
     (shaders/store-shader ::default
-                                         :shader-program-id program
-                                         :fragment-shader-id fragment
-                                         :vertex-shader-id vertex
-                                         :model-uniform-location model-location
-                                         :view-uniform-location view-location
-                                         :projection-uniform-location projection-location)
+                          :shader-program-id program
+                          :shaders {:fragment fragment
+                                    :vertex   vertex}
+                          :uniforms [{:uniform-id   ::uniform-model
+                                      :location     model-location
+                                      :uniform-type :mat4f}
+                                     {:uniform-id   ::uniform-view
+                                      :location     view-location
+                                      :uniform-type :mat4f}
+                                     {:uniform-id   ::uniform-projection
+                                      :location     projection-location
+                                      :uniform-type :mat4f}])
+
     (shaders/set-attribute-pointer-in-vao-for-location program "position")
     (shaders/set-attribute-pointer-in-vao-for-location program "color"))
 
@@ -58,17 +65,14 @@
 
   (doseq [s context]
     (let [{:keys [shader-program-id
-                  model-uniform-location
-                  view-uniform-location
-                  projection-uniform-location
                   model-matrix]} s]
       (shaders/use-program shader-program-id)
 
       (let [stack (MemoryStack/stackPush)]
           ;; TODO: add camera API functions
-        (GL32/glUniformMatrix4fv model-uniform-location false (.get model-matrix (.mallocFloat stack 16)))
-        (GL32/glUniformMatrix4fv view-uniform-location false (.get (:transform @camera/camera) (.mallocFloat stack 16)))
-        (GL32/glUniformMatrix4fv projection-uniform-location false (.get (:projection @camera/camera) (.mallocFloat stack 16)))
+        (shaders/set-uniform ::uniform-model false (.get model-matrix (.mallocFloat stack 16)))
+        (shaders/set-uniform ::uniform-view false (.get (:transform @camera/camera) (.mallocFloat stack 16)))
+        (shaders/set-uniform ::uniform-projection false (.get (:projection @camera/camera) (.mallocFloat stack 16)))
         (MemoryStack/stackPop)))
 
     (GL32/glDrawArrays GL32/GL_TRIANGLE_STRIP 0 4)))
